@@ -1,0 +1,29 @@
+{% extends 'accounts/dashboard_base.html' %}
+
+{% block menu %}
+
+<a href="#">POS</a>
+<a href="{% url 'orders:order_list' %}"> View Orders</a>
+<a href="#" > Sales</a>
+<div class="dropdown">
+    <a href="#">Products</a>
+    <div class="dropdown-content">
+      <!-- <a href="{% url 'manage_products' %}">manage products</a> -->
+      <a href="{% url 'product_list' %}">View Product List</a>
+      <a href="{% url 'add_product' %}">Add Product</a>
+    </div>
+  </div>
+    <a href="{% url 'cart:cart_detail' %}">
+    Cart ({{ request.session.cart|length|default:0 }})
+</a>
+
+<a class="logout" href="{% url 'logout' %}">Logout</a>
+
+{% endblock %}
+
+{% block content %}
+
+<h1>Cashier Dashboard</h1>
+<p>Make sales here</p>
+
+{% endblock %}

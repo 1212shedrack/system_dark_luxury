@@ -1,0 +1,201 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order {{ order.id }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f0f; --surface: #1a1a1a; --border: #2a2a2a;
+      --accent: #d4a94a; --accent-dim: #a07830; --text: #e8e0d4;
+      --muted: #7a7068; --radius: 12px;
+      --transition: 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; padding: 2rem 1rem 4rem; }
+
+    .wrapper { max-width: 860px; margin: 0 auto; }
+
+    .back-link { display: inline-flex; align-items: center; gap: .5rem; color: var(--muted); text-decoration: none; font-size: .85rem; letter-spacing: .04em; transition: color var(--transition); margin-bottom: 2rem; }
+    .back-link:hover { color: var(--accent); }
+    .back-link svg { width: 16px; height: 16px; }
+
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
+    .page-title { font-family: 'Playfair Display', serif; font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: 700; color: var(--text); }
+    .order-date { font-size: .82rem; color: var(--muted); margin-top: .3rem; }
+
+    .status-badge { display: inline-flex; align-items: center; padding: .35rem 1rem; border-radius: 99px; font-size: .8rem; font-weight: 600; letter-spacing: .04em; }
+    .status-pending    { background: #1a1200; border: 1px solid #a07830; color: var(--accent); }
+    .status-confirmed  { background: #0a1a10; border: 1px solid #2d6a4f; color: #52b788; }
+    .status-completed  { background: #0a1520; border: 1px solid #1d4e8f; color: #74b3f7; }
+    .status-cancelled  { background: #1a0a0a; border: 1px solid #7a2020; color: #e07070; }
+    .status-processing { background: #120a1a; border: 1px solid #5a2d8f; color: #b57bee; }
+
+    /* two column layout */
+    .layout { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; align-items: start; }
+
+    .section-label { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: .85rem; }
+
+    /* info card */
+    .info-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem; animation: fadeUp .35s ease both; }
+    .info-row { display: flex; justify-content: space-between; align-items: center; padding: .85rem 1.2rem; border-bottom: 1px solid var(--border); font-size: .88rem; }
+    .info-row:last-child { border-bottom: none; }
+    .info-row span:first-child { color: var(--muted); }
+    .info-row span:last-child { color: var(--text); font-weight: 500; text-align: right; }
+
+    /* items */
+    .items-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; animation: fadeUp .35s ease .1s both; }
+    .order-item { display: grid; grid-template-columns: 56px 1fr auto; gap: 1rem; align-items: center; padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); }
+    .order-item:last-child { border-bottom: none; }
+    .item-img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+    .item-name { font-weight: 500; font-size: .92rem; color: var(--text); }
+    .item-meta { font-size: .78rem; color: var(--muted); margin-top: .2rem; }
+    .item-total { font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+    /* sidebar */
+    .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+
+    .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.3rem; animation: fadeUp .35s ease .05s both; }
+    .summary-row { display: flex; justify-content: space-between; font-size: .85rem; color: var(--muted); padding: .35rem 0; }
+    .summary-divider { border: none; border-top: 1px solid var(--border); margin: .75rem 0; }
+    .summary-total { display: flex; justify-content: space-between; font-family: 'Playfair Display', serif; font-size: 1.2rem; }
+    .summary-total span:last-child { color: var(--accent); }
+
+    /* status update */
+    .status-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.3rem; animation: fadeUp .35s ease .15s both; }
+    .status-card .section-label { margin-bottom: 1rem; }
+
+    .status-select { width: 100%; padding: .6rem .9rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: .88rem; cursor: pointer; transition: border-color var(--transition); appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a7068' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .75rem center; padding-right: 2rem; }
+    .status-select:focus { outline: none; border-color: var(--accent); }
+    .status-select option { background: var(--surface); }
+
+    .btn-update-status { width: 100%; margin-top: .85rem; padding: .65rem; background: var(--accent); border: none; border-radius: 8px; color: #0f0f0f; font-family: 'DM Sans', sans-serif; font-size: .88rem; font-weight: 600; cursor: pointer; transition: background .25s ease, transform .2s ease; }
+    .btn-update-status:hover { background: #e8bc5a; transform: translateY(-1px); }
+
+    /* note card */
+    .note-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.3rem; animation: fadeUp .35s ease .2s both; }
+    .note-text { font-size: .88rem; color: var(--muted); line-height: 1.6; }
+    .note-empty { font-size: .85rem; color: var(--border); font-style: italic; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 720px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { order: -1; }
+      .order-item { grid-template-columns: 48px 1fr auto; gap: .75rem; }
+      .item-img { width: 48px; height: 48px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <a href="{% url 'orders:order_list' %}" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    All Orders
+  </a>
+
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Order {{ order.id }}</h2>
+      <div class="order-date">Placed on {{ order.created_at|date:"d M Y, H:i" }}</div>
+    </div>
+    <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+  </div>
+
+  <div class="layout">
+
+    <!-- LEFT COLUMN -->
+    <div>
+
+      <!-- Customer info -->
+      <div class="section-label">Customer Information</div>
+      <div class="info-card">
+        <div class="info-row">
+          <span>Name</span>
+          <span>{{ order.customer.get_full_name|default:order.customer.username }}</span>
+        </div>
+        <div class="info-row">
+          <span>Email</span>
+          <span>{{ order.customer.email }}</span>
+        </div>
+        <div class="info-row">
+          <span>Processed by</span>
+          <span>{{ order.created_by.get_full_name|default:order.created_by.username|default:"—" }}</span>
+        </div>
+      </div>
+
+      <!-- Order items -->
+      <div class="section-label">Items Ordered</div>
+      <div class="items-card">
+        {% for item in order.order_items.all %}
+        <div class="order-item">
+          {% if item.product.image %}
+            <img class="item-img" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+          {% else %}
+            <img class="item-img" src="{% static 'products/img/default.jpg' %}" alt="No Image">
+          {% endif %}
+          <div>
+            <div class="item-name">{{ item.product.name }}</div>
+            <div class="item-meta">{{ item.quantity }} × {{ item.price }}</div>
+          </div>
+          <div class="item-total">{{ item.total_price }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Note -->
+      <div class="section-label" style="margin-top:1.5rem;">Note</div>
+      <div class="note-card">
+        {% if order.note %}
+          <p class="note-text">{{ order.note }}</p>
+        {% else %}
+          <p class="note-empty">No note added.</p>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="sidebar">
+
+      <!-- Order summary -->
+      <div class="summary-card">
+        <div class="section-label">Order Summary</div>
+        {% for item in order.order_items.all %}
+        <div class="summary-row">
+          <span>{{ item.product.name }} ×{{ item.quantity }}</span>
+          <span>{{ item.total_price }}</span>
+        </div>
+        {% endfor %}
+        <hr class="summary-divider">
+        <div class="summary-total">
+          <span>Total</span>
+          <span>{{ order.get_total_price }}</span>
+        </div>
+      </div>
+
+      <!-- Update status -->
+      <div class="status-card">
+        <div class="section-label">Update Status</div>
+        <form method="post" action="{% url 'orders:order_detail' order.pk %}">
+          {% csrf_token %}
+          <select name="status" class="status-select">
+            <option value="pending"    {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="confirmed"  {% if order.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+            <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>Processing</option>
+            <option value="completed"  {% if order.status == 'completed' %}selected{% endif %}>Completed</option>
+            <option value="cancelled"  {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+          </select>
+          <button type="submit" class="btn-update-status">Update Status</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

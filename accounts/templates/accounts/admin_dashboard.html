@@ -1,0 +1,31 @@
+{% extends 'accounts/dashboard_base.html' %}
+
+{% block menu %}
+
+<a href="#"><i class="fa fa-home"></i> Dashboard</a><a href="#"><i class="fa fa-user"></i> Manage Cashier</a>
+ <div class="dropdown">
+    <a href="#"><i class="fa fa-box"></i> Products</a>
+    <div class="dropdown-content">
+      <a href="{% url 'manage_products' %}">manage products</a>
+      <a href="{% url 'product_list' %}">View Product List</a>
+      <a href="{% url 'add_product' %}">Add Product</a>
+    </div>
+  </div>
+  <a href="{% url 'cart:cart_detail' %}">
+    Cart ({{ request.session.cart|length|default:0 }})
+</a>
+<a href="#"><i class="fa fa-chart-bar"></i> Reports</a>
+<a href="#"><i class="fa fa-cog"></i> Settings</a>
+<a href="{% url 'orders:order_list' %}"><i class="fa fa-shopping-cart"></i> View Orders</a>
+<a href="#"><i class="fa fa-users"></i> Manage Users</a>
+<a href="#"><i class="fa fa-box"></i> Inventory</a>
+<a class="logout" href="{% url 'logout' %}" ><i class="fa fa-sign-out"></i> Logout</a>
+
+{% endblock %}
+
+{% block content %}
+
+<h1>Admin Dashboard</h1>
+<p>System control panel</p>
+
+{% endblock %}

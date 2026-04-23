@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmed</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f0f; --surface: #1a1a1a; --border: #2a2a2a;
+      --accent: #d4a94a; --accent-dim: #a07830; --text: #e8e0d4;
+      --muted: #7a7068; --radius: 12px;
+      --transition: 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; padding: 2rem 1rem 4rem; display: flex; align-items: flex-start; justify-content: center; }
+
+    .wrapper { max-width: 680px; width: 100%; }
+
+    /* success hero */
+    .success-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 3rem 2rem 2.5rem; text-align: center; margin-bottom: 1.5rem; animation: fadeUp .5s ease both; position: relative; overflow: hidden; }
+    .success-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-dim), var(--accent), var(--accent-dim)); }
+
+    .checkmark { width: 72px; height: 72px; border-radius: 50%; background: #1a1500; border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; animation: popIn .6s cubic-bezier(.34,1.56,.64,1) .2s both; }
+    .checkmark svg { width: 32px; height: 32px; color: var(--accent); }
+
+    .success-title { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 700; color: var(--text); margin-bottom: .6rem; }
+    .success-subtitle { color: var(--muted); font-size: .9rem; line-height: 1.6; }
+
+    .order-ref { display: inline-block; margin-top: 1.2rem; padding: .45rem 1.1rem; background: #1a1500; border: 1px solid var(--accent-dim); border-radius: 99px; font-size: .8rem; letter-spacing: .08em; color: var(--accent); font-weight: 500; }
+
+    /* order details */
+    .section-label { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 1.5rem 0 .85rem; }
+
+    .detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; animation: fadeUp .4s ease .15s both; }
+
+    .detail-row { display: flex; justify-content: space-between; align-items: center; padding: .9rem 1.2rem; border-bottom: 1px solid var(--border); font-size: .88rem; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row span:first-child { color: var(--muted); }
+    .detail-row span:last-child { color: var(--text); font-weight: 500; }
+    .detail-row .status { display: inline-flex; align-items: center; gap: .4rem; padding: .25rem .75rem; background: #1a1500; border: 1px solid var(--accent-dim); border-radius: 99px; color: var(--accent); font-size: .78rem; font-weight: 500; }
+
+    /* items */
+    .item-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; animation: fadeUp .4s ease .25s both; }
+    .order-item { display: grid; grid-template-columns: 52px 1fr auto; gap: 1rem; align-items: center; padding: .9rem 1.2rem; border-bottom: 1px solid var(--border); }
+    .order-item:last-child { border-bottom: none; }
+    .item-img { width: 52px; height: 52px; object-fit: cover; border-radius: 7px; border: 1px solid var(--border); }
+    .item-name { font-weight: 500; font-size: .9rem; color: var(--text); }
+    .item-qty { font-size: .78rem; color: var(--muted); margin-top: .15rem; }
+    .item-price { font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+    /* total */
+    .total-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.2rem; background: #141005; border: 1px solid var(--border); border-radius: var(--radius); margin-top: .75rem; animation: fadeUp .4s ease .3s both; }
+    .total-row span:first-child { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--text); }
+    .total-row span:last-child { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--accent); font-weight: 700; }
+
+    /* actions */
+    .actions { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; animation: fadeUp .4s ease .35s both; }
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; color: #0f0f0f; font-family: 'DM Sans', sans-serif; font-size: .88rem; font-weight: 600; padding: .75rem 1.6rem; background: var(--accent); border: none; border-radius: 10px; text-decoration: none; cursor: pointer; transition: background .25s ease, transform .2s ease, box-shadow .25s ease; flex: 1; }
+    .btn-primary:hover { background: #e8bc5a; transform: translateY(-2px); box-shadow: 0 4px 18px #d4a94a40; }
+    .btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: .88rem; padding: .75rem 1.4rem; background: transparent; border: 1px solid var(--border); border-radius: 10px; text-decoration: none; transition: border-color var(--transition), color var(--transition); flex: 1; }
+    .btn-secondary:hover { border-color: var(--muted); color: var(--text); }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes popIn { from { opacity: 0; transform: scale(.5); } to { opacity: 1; transform: scale(1); } }
+
+    @media (max-width: 600px) {
+      .success-card { padding: 2rem 1.2rem; }
+      .order-item { grid-template-columns: 44px 1fr auto; gap: .75rem; padding: .8rem .9rem; }
+      .item-img { width: 44px; height: 44px; }
+      .actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Success hero -->
+  <div class="success-card">
+    <div class="checkmark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <h2 class="success-title">Order Placed!</h2>
+    <p class="success-subtitle">Thank you, {{ order.customer.get_full_name|default:order.customer.username }}.<br>Your order has been received and is being processed.</p>
+    <span class="order-ref">Order {{ order.id }}</span>
+  </div>
+
+  <!-- Order details -->
+  <div class="section-label">Order Details</div>
+  <div class="detail-card">
+    <div class="detail-row">
+      <span>Order ID</span>
+      <span>{{ order.id }}</span>
+    </div>
+    <div class="detail-row">
+      <span>Date</span>
+      <span>{{ order.created_at|date:"d M Y, H:i" }}</span>
+    </div>
+    <div class="detail-row">
+      <span>Status</span>
+      <span><span class="status">{{ order.get_status_display }}</span></span>
+    </div>
+    <div class="detail-row">
+      <span>Customer</span>
+      <span>{{ order.customer.get_full_name|default:order.customer.username }}</span>
+    </div>
+  </div>
+
+  <!-- Items -->
+  <div class="section-label">Items Ordered</div>
+  <div class="item-list">
+    {% for item in order.order_items.all %}
+    <div class="order-item">
+      {% if item.product.image %}
+        <img class="item-img" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+      {% else %}
+        <img class="item-img" src="{% static 'products/img/default.jpg' %}" alt="No Image">
+      {% endif %}
+      <div>
+        <div class="item-name">{{ item.product.name }}</div>
+        <div class="item-qty">Qty: {{ item.quantity }}</div>
+      </div>
+      <div class="item-price">{{ item.total_price }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Total -->
+  <div class="total-row">
+    <span>Total</span>
+    <span>{{ order.get_total_price }}</span>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <a href="{% url 'orders:customer_order_list' %}" class="btn-secondary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;">
+        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+      </svg>
+      My Orders
+    </a>
+    <a href="{% url 'product_list' %}" class="btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;">
+        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+      </svg>
+      Continue Shopping
+    </a>
+  </div>
+
+</div>
+</body>
+</html>

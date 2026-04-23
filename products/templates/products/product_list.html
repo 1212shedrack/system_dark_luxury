@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop</title>
+    <link rel="stylesheet" href="{% static 'products/css/list.css' %}">
+</head>
+<body>
+<div>
+     <!-- Dynamic Home Button -->
+{% if request.user.is_authenticated %}
+    {% if request.user.is_superuser or request.user.role == 'admin' %}
+        <a href="{% url 'admin_dashboard' %}" class="home-btn">Home</a>
+    {% elif request.user.role == 'cashier' %}
+        <a href="{% url 'cashier_dashboard' %}" class="home-btn">Home</a>
+    {% elif request.user.role == 'customer' %}
+        <a href="{% url 'customer_dashboard' %}" class="home-btn">Home</a>
+    {% endif %}
+{% endif %}
+
+</div> <br>
+<div class="container">
+<div>
+     <a href="{% url 'cart:cart_detail' %}" id="cart-link">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <path d="M16 10a4 4 0 01-8 0"/>
+  </svg>
+  <span id="cart-label">Cart</span>
+  <span id="cart-badge">{{ request.session.cart|length|default:0 }}</span>
+</a>
+</div>
+
+    <h2>Products</h2> <br>
+
+    <input type="text" id="search" placeholder="Search products...">
+
+    <div class="grid" id="grid">
+        {% for product in products %}
+        <div class="card">
+            {% if product.image %}
+    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+{% else %}
+    <img src="{% static 'products/img/default.jpg' %}" alt="No Image">
+{% endif %}
+            <h3>{{ product.name }}</h3>
+            <p>{{ product.price }} TZS</p>
+            <small>Stock: {{ product.quantity }}</small>
+            <p>{{ product.description }}</p>
+<a href="{% url 'cart:cart_add' product.id %}" id="btn-add-cart">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <path d="M16 10a4 4 0 01-8 0"/>
+    <line x1="12" y1="13" x2="12" y2="17"/>
+    <line x1="10" y1="15" x2="14" y2="15"/>
+  </svg>
+  <span>+Cart</span>
+</a>        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<script src="{% static 'products/js/script.js' %}"></script>
+</body>
+</html>

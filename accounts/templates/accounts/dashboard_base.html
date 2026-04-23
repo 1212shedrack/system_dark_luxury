@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'accounts/css/dashboard.css' %}">
+</head>
+<body>
+
+<!-- overlay for mobile sidebar -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMenu()"></div>
+
+<!-- ═════ SIDEBAR ═════ -->
+<div class="sidebar" id="sidebar">
+  <h2>My System</h2>
+  <div id="sidebar-links">
+    {% block menu %}
+    {% endblock %}
+  </div>
+</div>
+
+<!-- ═════ MAIN ═════ -->
+<div class="main" id="main">
+
+  <!-- ═════ TOPBAR ═════ -->
+  <div class="topbar">
+    <span class="menu-btn" onclick="toggleMenu()">
+      <i class="fa fa-bars"></i>
+    </span>
+    <div>
+      Welcome, <b>{{ request.user.username }}</b>
+    </div>
+  </div>
+
+  <!-- MOBILE DROPDOWN MENU -->
+  <div class="mobile-menu" id="mobileMenu">
+    {% block mobile_menu %}
+    {% endblock %}
+  </div>
+
+  <!-- PAGE CONTENT -->
+  <div class="content">
+    {% block content %}
+    {% endblock %}
+  </div>
+
+</div>
+
+<script src="{% static 'accounts/js/dashboard.js' %}"></script>
+</body>
+</html>

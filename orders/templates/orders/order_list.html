@@ -1,0 +1,259 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Orders</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f0f; --surface: #1a1a1a; --border: #2a2a2a;
+      --accent: #d4a94a; --accent-dim: #a07830; --text: #e8e0d4;
+      --muted: #7a7068; --radius: 12px;
+      --transition: 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; padding: 2rem 1rem 4rem; }
+
+    .wrapper { max-width: 1000px; margin: 0 auto; }
+
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem; }
+    .page-title { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; color: var(--text); display: inline-block; }
+    .page-title::after { content: ''; display: block; width: 40%; height: 3px; background: var(--accent); margin-top: .35rem; border-radius: 2px; }
+
+    /* stats */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.3rem; animation: fadeUp .3s ease both; }
+    .stat-card:nth-child(1) { animation-delay: .05s; }
+    .stat-card:nth-child(2) { animation-delay: .10s; }
+    .stat-card:nth-child(3) { animation-delay: .15s; }
+    .stat-card:nth-child(4) { animation-delay: .20s; }
+    .stat-label { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+    .stat-value { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--accent); font-weight: 700; }
+
+    /* filter tabs */
+    .filter-tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .filter-tab { padding: .4rem .9rem; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: .78rem; letter-spacing: .05em; cursor: pointer; transition: all var(--transition); text-decoration: none; }
+    .filter-tab:hover, .filter-tab.active { border-color: var(--accent); color: var(--accent); background: #1a1500; }
+
+    /* table */
+    .table-wrap { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    thead tr { background: var(--surface); border-bottom: 1px solid var(--border); }
+    th { padding: .9rem 1.1rem; text-align: left; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+    tbody tr { border-bottom: 1px solid var(--border); background: var(--bg); transition: background var(--transition); animation: fadeUp .3s ease both; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #141414; }
+    tbody tr:nth-child(1) { animation-delay: .05s; }
+    tbody tr:nth-child(2) { animation-delay: .10s; }
+    tbody tr:nth-child(3) { animation-delay: .15s; }
+    tbody tr:nth-child(4) { animation-delay: .20s; }
+    tbody tr:nth-child(5) { animation-delay: .25s; }
+    td { padding: .9rem 1.1rem; vertical-align: middle; }
+
+    .customer-cell { display: flex; align-items: center; gap: .6rem; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 600; color: var(--accent); flex-shrink: 0; text-transform: uppercase; }
+    .customer-name { font-weight: 500; color: var(--text); }
+    .customer-email { font-size: .75rem; color: var(--muted); }
+
+    .status-badge { display: inline-flex; align-items: center; padding: .25rem .75rem; border-radius: 99px; font-size: .73rem; font-weight: 600; letter-spacing: .04em; }
+    .status-pending    { background: #1a1200; border: 1px solid #a07830; color: var(--accent); }
+    .status-confirmed  { background: #0a1a10; border: 1px solid #2d6a4f; color: #52b788; }
+    .status-completed  { background: #0a1520; border: 1px solid #1d4e8f; color: #74b3f7; }
+    .status-cancelled  { background: #1a0a0a; border: 1px solid #7a2020; color: #e07070; }
+    .status-processing { background: #120a1a; border: 1px solid #5a2d8f; color: #b57bee; }
+
+    .total-cell { font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 500; }
+
+    .view-btn { display: inline-flex; align-items: center; gap: .35rem; color: var(--muted); text-decoration: none; font-size: .8rem; padding: .35rem .7rem; border: 1px solid transparent; border-radius: 7px; transition: all var(--transition); }
+    .view-btn:hover { color: var(--accent); border-color: var(--accent-dim); background: #1a1500; }
+    .view-btn svg { width: 13px; height: 13px; }
+
+    /* mobile cards */
+    .mobile-cards { display: none; }
+    .m-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: .85rem; animation: fadeUp .3s ease both; }
+    .m-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: .75rem; }
+    .m-order-id { font-weight: 600; font-size: .9rem; color: var(--text); }
+    .m-date { font-size: .75rem; color: var(--muted); margin-top: .15rem; }
+    .m-card-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: .75rem; padding-top: .75rem; border-top: 1px solid var(--border); }
+
+    .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: .85rem;
+  letter-spacing: .04em;
+  transition: color var(--transition);
+  margin-bottom: .75rem;
+}
+.back-link:hover { color: var(--accent); }
+.back-link svg { width: 16px; height: 16px; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 700px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .table-wrap { display: none; }
+      .mobile-cards { display: block; margin-top: 1rem; }
+    }
+    @media (max-width: 400px) {
+      .stats { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  
+    <!-- topbar -->
+<div class="topbar">
+  <div>
+    <!-- Dynamic Home Button -->
+    {% if request.user.is_authenticated %}
+      {% if request.user.is_superuser or request.user.role == 'admin' %}
+        <a href="{% url 'admin_dashboard' %}" class="back-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          Home
+        </a>
+      {% elif request.user.role == 'cashier' %}
+        <a href="{% url 'cashier_dashboard' %}" class="back-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          Home
+        </a>
+      {% endif %}
+    {% endif %}
+    
+  </div>
+  <h2 class="page-title">All Orders</h2>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+  <div class="stat-card">
+    <div class="stat-label">Total Orders</div>
+    <div class="stat-value">{{ total_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Pending</div>
+    <div class="stat-value">{{ pending_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Completed</div>
+    <div class="stat-value">{{ completed_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Cancelled</div>
+    <div class="stat-value">{{ cancelled_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Processing</div>
+    <div class="stat-value">{{ processing_count }}</div>
+  </div>
+</div>
+
+  <!-- Filter tabs -->
+<div class="filter-tabs">
+  <a href="{% url 'orders:order_list' %}"
+     class="filter-tab {% if not current_status %}active{% endif %}">
+    All
+  </a>
+  <a href="{% url 'orders:order_list' %}?status=pending"
+     class="filter-tab {% if current_status == 'pending' %}active{% endif %}">
+    Pending
+  </a>
+  <a href="{% url 'orders:order_list' %}?status=confirmed"
+     class="filter-tab {% if current_status == 'confirmed' %}active{% endif %}">
+    Confirmed
+  </a>
+  <a href="{% url 'orders:order_list' %}?status=processing"
+     class="filter-tab {% if current_status == 'processing' %}active{% endif %}">
+    Processing
+  </a>
+  <a href="{% url 'orders:order_list' %}?status=completed"
+     class="filter-tab {% if current_status == 'completed' %}active{% endif %}">
+    Completed
+  </a>
+  <a href="{% url 'orders:order_list' %}?status=cancelled"
+     class="filter-tab {% if current_status == 'cancelled' %}active{% endif %}">
+    Cancelled
+  </a>
+</div>
+
+  <!-- Desktop table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><strong>{{ order.id }}</strong></td>
+          <td>
+            <div class="customer-cell">
+              <div class="avatar">{{ order.customer.username|slice:":1" }}</div>
+              <div>
+                <div class="customer-name">{{ order.customer.get_full_name|default:order.customer.username }}</div>
+                <div class="customer-email">{{ order.customer.email }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ order.order_items.count }} item{{ order.order_items.count|pluralize }}</td>
+          <td class="total-cell">{{ order.get_total_price }}</td>
+          <td><span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+          <td style="color:var(--muted);font-size:.82rem;">{{ order.created_at|date:"d M Y" }}</td>
+          <td>
+            <a class="view-btn" href="{% url 'orders:order_detail' order.pk %}">
+              View
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile cards -->
+  <div class="mobile-cards">
+    {% for order in orders %}
+    <div class="m-card">
+      <div class="m-card-top">
+        <div>
+          <div class="m-order-id">{{ order.id }} — {{ order.customer.get_full_name|default:order.customer.username }}</div>
+          <div class="m-date">{{ order.created_at|date:"d M Y, H:i" }}</div>
+        </div>
+        <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+      </div>
+      <div style="font-size:.82rem;color:var(--muted);">{{ order.order_items.count }} item{{ order.order_items.count|pluralize }}</div>
+      <div class="m-card-bottom">
+        <span style="font-family:'Playfair Display',serif;color:var(--accent);">{{ order.get_total_price }}</span>
+        <a class="view-btn" href="{% url 'orders:order_detail' order.pk %}">
+          View
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+</body>
+</html>

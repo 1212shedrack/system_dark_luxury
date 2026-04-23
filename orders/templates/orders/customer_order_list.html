@@ -1,0 +1,149 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f0f; --surface: #1a1a1a; --border: #2a2a2a;
+      --accent: #d4a94a; --accent-dim: #a07830; --text: #e8e0d4;
+      --muted: #7a7068; --radius: 12px;
+      --transition: 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; padding: 2rem 1rem 4rem; }
+
+    .wrapper { max-width: 800px; margin: 0 auto; }
+
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem; }
+    .back-link { display: inline-flex; align-items: center; gap: .5rem; color: var(--muted); text-decoration: none; font-size: .85rem; letter-spacing: .04em; transition: color var(--transition); }
+    .back-link:hover { color: var(--accent); }
+    .back-link svg { width: 16px; height: 16px; }
+
+    .page-title { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; color: var(--text); display: inline-block; }
+    .page-title::after { content: ''; display: block; width: 40%; height: 3px; background: var(--accent); margin-top: .35rem; border-radius: 2px; }
+
+    /* empty state */
+    .empty { text-align: center; padding: 5rem 2rem; color: var(--muted); }
+    .empty svg { width: 56px; height: 56px; color: var(--border); margin-bottom: 1.2rem; }
+    .empty p { font-size: 1rem; margin-bottom: 1.5rem; }
+    .btn-shop { display: inline-flex; align-items: center; gap: .5rem; color: #0f0f0f; font-family: 'DM Sans', sans-serif; font-size: .88rem; font-weight: 600; padding: .7rem 1.6rem; background: var(--accent); border-radius: 10px; text-decoration: none; transition: background .25s ease; }
+    .btn-shop:hover { background: #e8bc5a; }
+
+    /* order cards */
+    .order-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 1rem; overflow: hidden; animation: fadeUp .35s ease both; transition: border-color var(--transition); }
+    .order-card:hover { border-color: var(--accent-dim); }
+    .order-card:nth-child(1) { animation-delay: .05s; }
+    .order-card:nth-child(2) { animation-delay: .10s; }
+    .order-card:nth-child(3) { animation-delay: .15s; }
+    .order-card:nth-child(4) { animation-delay: .20s; }
+
+    .card-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: .75rem; }
+    .order-id { font-weight: 600; font-size: .9rem; color: var(--text); }
+    .order-date { font-size: .78rem; color: var(--muted); }
+    .status-badge { display: inline-flex; align-items: center; gap: .35rem; padding: .28rem .8rem; border-radius: 99px; font-size: .75rem; font-weight: 600; letter-spacing: .04em; }
+    .status-pending    { background: #1a1200; border: 1px solid #a07830; color: var(--accent); }
+    .status-confirmed  { background: #0a1a10; border: 1px solid #2d6a4f; color: #52b788; }
+    .status-completed  { background: #0a1520; border: 1px solid #1d4e8f; color: #74b3f7; }
+    .status-cancelled  { background: #1a0a0a; border: 1px solid #7a2020; color: #e07070; }
+    .status-processing { background: #120a1a; border: 1px solid #5a2d8f; color: #b57bee; }
+
+    .card-body { padding: 1rem 1.2rem; }
+    .items-preview { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .85rem; }
+    .preview-img { width: 44px; height: 44px; object-fit: cover; border-radius: 7px; border: 1px solid var(--border); }
+    .preview-more { width: 44px; height: 44px; border-radius: 7px; border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: .72rem; color: var(--muted); }
+
+    .card-footer { display: flex; align-items: center; justify-content: space-between; padding: .85rem 1.2rem; background: #141414; border-top: 1px solid var(--border); }
+    .order-total { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--accent); }
+    .order-total span { font-family: 'DM Sans', sans-serif; font-size: .75rem; color: var(--muted); font-weight: 300; margin-right: .4rem; }
+    .view-link { display: inline-flex; align-items: center; gap: .35rem; color: var(--muted); text-decoration: none; font-size: .82rem; letter-spacing: .04em; transition: color var(--transition); }
+    .view-link:hover { color: var(--accent); }
+    .view-link svg { width: 14px; height: 14px; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 600px) {
+      .card-header { flex-direction: column; align-items: flex-start; }
+      .card-footer { flex-direction: column; align-items: flex-start; gap: .75rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+ <div class="topbar">
+  <!-- Home button -->
+  <a href="{% url 'customer_dashboard' %}" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+      <polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    Home
+  </a>
+
+  <a href="{% url 'product_list' %}" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5M12 5l-7 7 7 7"/>
+    </svg>
+    Continue Shopping
+  </a>
+</div>
+
+  <h2 class="page-title">My Orders</h2>
+
+  {% if orders %}
+  <div style="margin-top:2rem;">
+    {% for order in orders %}
+    <div class="order-card">
+      <div class="card-header">
+        <div>
+          <div class="order-id">Order {{ order.id }}</div>
+          <div class="order-date">{{ order.created_at|date:"d M Y, H:i" }}</div>
+        </div>
+        <span class="status-badge status-{{ order.status }}">
+          {{ order.get_status_display }}
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="items-preview">
+          {% for item in order.order_items.all|slice:":4" %}
+            {% if item.product.image %}
+              <img class="preview-img" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+            {% else %}
+              <img class="preview-img" src="{% static 'products/img/default.jpg' %}" alt="No Image">
+            {% endif %}
+          {% endfor %}
+          {% if order.order_items.count > 4 %}
+            <div class="preview-more">+{{ order.order_items.count|add:"-4" }}</div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="order-total">
+          <span>Total</span>{{ order.get_total_price }}
+        </div>
+        <a href="{% url 'orders:order_confirmation' order.pk %}" class="view-link">
+          View Details
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+    </svg>
+    <p>You haven't placed any orders yet.</p>
+    <a href="{% url 'product_list' %}" class="btn-shop">Start Shopping</a>
+  </div>
+  {% endif %}
+
+</div>
+</body>
+</html>

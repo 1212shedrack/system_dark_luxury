@@ -1,0 +1,157 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Summary</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f0f; --surface: #1a1a1a; --border: #2a2a2a;
+      --accent: #d4a94a; --accent-dim: #a07830; --text: #e8e0d4;
+      --muted: #7a7068; --radius: 12px;
+      --transition: 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; padding: 2rem 1rem 4rem; }
+
+    .wrapper { max-width: 720px; margin: 0 auto; }
+
+    .back-link { display: inline-flex; align-items: center; gap: .5rem; color: var(--muted); text-decoration: none; font-size: .85rem; letter-spacing: .04em; transition: color var(--transition); margin-bottom: 2rem; }
+    .back-link:hover { color: var(--accent); }
+    .back-link svg { width: 16px; height: 16px; }
+
+    .page-title { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; color: var(--text); display: inline-block; }
+    .page-title::after { content: ''; display: block; width: 40%; height: 3px; background: var(--accent); margin-top: .35rem; border-radius: 2px; }
+
+    /* steps */
+    .steps { display: flex; align-items: center; gap: 0; margin: 2rem 0; }
+    .step { display: flex; align-items: center; gap: .5rem; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+    .step.active { color: var(--accent); }
+    .step.done { color: var(--text); }
+    .step-num { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 600; flex-shrink: 0; }
+    .step.active .step-num { background: var(--accent); border-color: var(--accent); color: #0f0f0f; }
+    .step.done .step-num { background: var(--surface); border-color: var(--text); }
+    .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 .75rem; }
+
+    /* items */
+    .section-label { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 2rem 0 .85rem; }
+
+    .item-list { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .order-item { display: grid; grid-template-columns: 56px 1fr auto; gap: 1rem; align-items: center; padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); background: var(--surface); animation: fadeUp .3s ease both; }
+    .order-item:last-child { border-bottom: none; }
+    .order-item:nth-child(1) { animation-delay: .05s; }
+    .order-item:nth-child(2) { animation-delay: .10s; }
+    .order-item:nth-child(3) { animation-delay: .15s; }
+    .order-item:nth-child(4) { animation-delay: .20s; }
+
+    .item-img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+    .item-info { display: flex; flex-direction: column; gap: .25rem; }
+    .item-name { font-weight: 500; font-size: .92rem; color: var(--text); }
+    .item-qty { font-size: .8rem; color: var(--muted); }
+    .item-price { font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; font-size: .95rem; }
+
+    /* summary box */
+    .summary-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.4rem 1.6rem; margin-top: 1.5rem; }
+    .summary-row { display: flex; justify-content: space-between; font-size: .88rem; color: var(--muted); padding: .4rem 0; }
+    .summary-divider { border: none; border-top: 1px solid var(--border); margin: .75rem 0; }
+    .summary-total { display: flex; justify-content: space-between; font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--text); }
+    .summary-total span:last-child { color: var(--accent); }
+
+    /* confirm form */
+    .confirm-section { margin-top: 1.8rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .btn-confirm { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; color: #0f0f0f; font-family: 'DM Sans', sans-serif; font-size: .92rem; font-weight: 600; letter-spacing: .04em; padding: .8rem 2rem; background: var(--accent); border: none; border-radius: 10px; cursor: pointer; transition: background .25s ease, box-shadow .25s ease, transform .2s ease; flex: 1; }
+    .btn-confirm:hover { background: #e8bc5a; box-shadow: 0 4px 18px #d4a94a40; transform: translateY(-2px); }
+    .btn-confirm:active { transform: translateY(0); box-shadow: none; }
+    .btn-confirm svg { width: 17px; height: 17px; }
+
+    .btn-cancel { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: .88rem; font-weight: 400; padding: .8rem 1.4rem; background: transparent; border: 1px solid var(--border); border-radius: 10px; text-decoration: none; transition: border-color var(--transition), color var(--transition); }
+    .btn-cancel:hover { border-color: var(--muted); color: var(--text); }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 600px) {
+      .order-item { grid-template-columns: 48px 1fr auto; gap: .75rem; padding: .85rem 1rem; }
+      .item-img { width: 48px; height: 48px; }
+      .confirm-section { flex-direction: column; }
+      .btn-confirm, .btn-cancel { width: 100%; }
+      .steps .step span { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <a href="{% url 'cart:cart_detail' %}" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back to Cart
+  </a>
+
+  <h2 class="page-title">Order Summary</h2>
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step done">
+      <div class="step-num">✓</div>
+      <span>Cart</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step active">
+      <div class="step-num">2</div>
+      <span>Review</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <span>Confirmed</span>
+    </div>
+  </div>
+
+  <!-- Items -->
+  <div class="section-label">Items in your order</div>
+  <div class="item-list">
+    {% for item in cart %}
+    <div class="order-item">
+      {% if item.product.image %}
+        <img class="item-img" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+      {% else %}
+        <img class="item-img" src="{% static 'products/img/default.jpg' %}" alt="No Image">
+      {% endif %}
+      <div class="item-info">
+        <div class="item-name">{{ item.product.name }}</div>
+        <div class="item-qty">Qty: {{ item.quantity }}</div>
+      </div>
+      <div class="item-price">{{ item.total_price }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-box">
+    <div class="summary-row"><span>Subtotal</span><span>{{ cart.get_total_price }}</span></div>
+    <div class="summary-row"><span>Delivery</span><span>—</span></div>
+    <hr class="summary-divider">
+    <div class="summary-total"><span>Total</span><span>{{ cart.get_total_price }}</span></div>
+  </div>
+
+  <!-- Confirm -->
+  <div class="confirm-section">
+    <a href="{% url 'cart:cart_detail' %}" class="btn-cancel">Cancel</a>
+    <form method="post" action="{% url 'orders:place_order' %}" style="flex:2;">
+      {% csrf_token %}
+      <button type="submit" class="btn-confirm" style="width:100%;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/>
+          <path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/>
+          <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
+        </svg>
+        Confirm Order
+      </button>
+    </form>
+  </div>
+
+</div>
+</body>
+</html>
