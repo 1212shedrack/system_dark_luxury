@@ -13,7 +13,7 @@ SECRET_KEY = "django-insecure-nn13667ymk!hifpl6@1-v4at5vg9wh$wqp"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.100.95', '127.0.0.1']
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     "products",
     "cart",
     "orders",
+    "POS",
 ]
 
 MIDDLEWARE = [
@@ -84,6 +85,13 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation."
         "NumericPasswordValidator",
     },
+]
+
+# authentication backends
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.EmailBackend',
+    'accounts.backends.StaffNumberBackend',
+    'accounts.backends.UsernameBackend',
 ]
 
 LANGUAGE_CODE = "en-us"

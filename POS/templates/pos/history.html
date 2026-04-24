@@ -1,0 +1,77 @@
+
+{% load static %}
+
+{% block title %}Sale History{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'pos/css/pos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="history-page">
+  <div class="history-header">
+    <h1>Sale history</h1>
+    <form method="get" class="date-filter">
+      <input type="date" name="date" value="{{ filter_date|date:'Y-m-d' }}"
+             onchange="this.form.submit()">
+    </form>
+  </div>
+
+  <div class="history-stats">
+    <div class="stat-card">
+      <span class="stat-card-label">Sales today</span>
+      <span class="stat-card-val">{{ sales.count }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-card-label">Revenue</span>
+      <span class="stat-card-val">TZS {{ daily_total|floatformat:0 }}</span>
+    </div>
+  </div>
+
+  {% if sales %}
+  <table class="history-table">
+    <thead>
+      <tr>
+        <th>Receipt #</th>
+        <th>Time</th>
+        <th>Items</th>
+        <th>Payment</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sale in sales %}
+      <tr class="{% if sale.status == 'refunded' %}row-refunded{% endif %}">
+        <td class="sale-number">{{ sale.sale_number }}</td>
+        <td>{{ sale.created_at|time:"H:i" }}</td>
+        <td>{{ sale.item_count }}</td>
+        <td>{{ sale.get_payment_method_display }}</td>
+        <td class="sale-total">TZS {{ sale.total_amount|floatformat:0 }}</td>
+        <td>
+          <span class="badge badge-{{ sale.status }}">{{ sale.get_status_display }}</span>
+        </td>
+        <td class="row-actions">
+          <a href="{% url 'pos:receipt' sale.id %}" class="btn-sm">Receipt</a>
+          {% if sale.status == 'completed' %}
+          <form method="post" action="{% url 'pos:refund' sale.id %}" style="display:inline"
+                onsubmit="return confirm('Refund {{ sale.sale_number }}? quantity will be restored.')">
+            {% csrf_token %}
+            <button type="submit" class="btn-sm btn-danger">Refund</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% else %}
+  <div class="empty-history">
+    <p>No sales recorded for {{ filter_date|date:"d M Y" }}.</p>
+    <a href="{% url 'pos:screen' %}" class="btn btn-primary">Go to POS</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
