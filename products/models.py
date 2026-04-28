@@ -9,13 +9,13 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    id = models.AutoField(primary_key=True)  # explicit for clarity
+    id = models.AutoField(primary_key=True)
 
     name = models.CharField(max_length=200)
     category = models.ForeignKey(Category,
                                  on_delete=models.SET_NULL, null=True)
 
-    quantity = models.IntegerField(default=0)  # stock
+    quantity = models.IntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
     description = models.TextField(blank=True, null=True)
@@ -24,7 +24,6 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # OPTIONAL (important for business)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):

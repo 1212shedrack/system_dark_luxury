@@ -1,0 +1,99 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ customer.username }} — ShopOS</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'accounts/css/manage.css' %}">
+</head>
+<body>
+<div class="manage-wrap">
+
+  <div class="form-header">
+    <a href="{% url 'customer_list' %}" class="back-link">
+      <i class="fa fa-arrow-left"></i> Back to customers
+    </a>
+    <h1 class="form-title">Customer profile</h1>
+  </div>
+
+  <!-- Profile card -->
+  <div class="profile-card">
+    <div class="profile-avatar">
+      {{ customer.username|first|upper }}
+    </div>
+    <div class="profile-info">
+      <div class="profile-name">
+        {{ customer.get_full_name|default:customer.username }}
+      </div>
+      <div class="profile-meta">
+        <span><i class="fa fa-user"></i> {{ customer.username }}</span>
+        <span><i class="fa fa-envelope"></i> {{ customer.email|default:"No email" }}</span>
+        <span><i class="fa fa-calendar"></i> Joined {{ customer.date_joined|date:"d M Y" }}</span>
+      </div>
+      <div style="margin-top:10px">
+        {% if customer.is_active %}
+          <span class="badge badge-active">Active</span>
+        {% else %}
+          <span class="badge badge-inactive">Inactive</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="profile-stats">
+      <div class="profile-stat">
+        <div class="profile-stat-val">{{ orders.count }}</div>
+        <div class="profile-stat-label">Orders</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-val">
+          TZS {{ total_spent|floatformat:0 }}
+        </div>
+        <div class="profile-stat-label">Total spent</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order history -->
+  <div class="section-title-bar">
+    <span><i class="fa fa-shopping-cart"></i> Order history</span>
+  </div>
+
+  <div class="table-wrap">
+    <table class="manage-table">
+      <thead>
+        <tr>
+          <th>Order #</th>
+          <th>Date</th>
+          <th>Total</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td class="mono">#{{ order.id }}</td>
+          <td class="text-muted">
+            {{ order.created_at|date:"d M Y H:i" }}
+          </td>
+          <td class="amount">
+            TZS {{ order.get_total_price|floatformat:0 }}
+          </td>
+          <td>
+            <span class="badge badge-{{ order.status }}">
+              {{ order.get_status_display }}
+            </span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="empty-row">No orders yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>

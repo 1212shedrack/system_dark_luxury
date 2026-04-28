@@ -9,6 +9,8 @@ class EmailBackend(BaseBackend):
     def authenticate(self, request, identifier=None, password=None, **kwargs):
         try:
             user = User.objects.get(email=identifier, role='admin')
+            if not user.is_active:
+                return None
             if user.check_password(password):
                 return user
         except User.DoesNotExist:
@@ -26,6 +28,8 @@ class StaffNumberBackend(BaseBackend):
     def authenticate(self, request, identifier=None, password=None, **kwargs):
         try:
             user = User.objects.get(staff_number=identifier, role='cashier')
+            if not user.is_active:
+                return None
             if user.check_password(password):
                 return user
         except User.DoesNotExist:
@@ -43,6 +47,8 @@ class UsernameBackend(BaseBackend):
     def authenticate(self, request, identifier=None, password=None, **kwargs):
         try:
             user = User.objects.get(username=identifier, role='customer')
+            if not user.is_active:
+                return None
             if user.check_password(password):
                 return user
         except User.DoesNotExist:

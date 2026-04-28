@@ -1,28 +1,45 @@
-
 {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Receipt {{ sale.sale_number }} — ShopOS</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'pos/css/receipt.css' %}">
+</head>
+<body>
 
-{% block title %}Receipt — {{ sale.sale_number }}{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'pos/css/pos.css' %}">
-{% endblock %}
-
-{% block content %}
 <div class="receipt-page">
+
   <div class="receipt-actions no-print">
-    <button onclick="window.print()" class="btn btn-primary">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-      Print receipt
+    <button onclick="window.print()" class="btn btn-gold">
+      <i class="fa fa-print"></i> Print receipt
     </button>
-    <a href="{% url 'pos:screen' %}" class="btn btn-outline">New sale</a>
-    <a href="{% url 'pos:history' %}" class="btn btn-outline">Sale history</a>
+    <a href="{% url 'pos:screen' %}" class="btn btn-outline">
+      <i class="fa fa-plus"></i> New sale
+    </a>
+    <a href="{% url 'pos:history' %}" class="btn btn-outline">
+      <i class="fa fa-list"></i> History
+    </a>
   </div>
 
-  <div class="receipt-paper" id="receipt">
+  <div class="receipt-paper">
     <div class="receipt-header">
-      <div class="receipt-shop-name">{{ request.user.get_full_name|default:"Shop POS" }}</div>
-      <div class="receipt-tagline">Thank you for your purchase</div>
-      <div class="receipt-divider">- - - - - - - - - - - - - - - -</div>
+      {% if shop_settings.logo %}
+<div class="receipt-logo-wrap">
+  <img src="{{ shop_settings.logo.url }}"
+       alt="{{ shop_settings.shop_name }}"
+       class="receipt-logo">
+</div>
+{% endif %}
+<div class="receipt-shop-name">
+  {{ shop_settings.shop_name|default:"ShopOS" }}
+</div>
+<div class="receipt-tagline">
+  {{ shop_settings.receipt_footer|default:"Thank you for your purchase" }}
+</div>
+      <div class="receipt-divider">------</div>
     </div>
 
     <div class="receipt-meta">
@@ -36,64 +53,69 @@
         <span>Time</span><span>{{ sale.created_at|time:"H:i" }}</span>
       </div>
       <div class="receipt-meta-row">
-        <span>Cashier</span><span>{{ sale.cashier.get_full_name|default:sale.cashier.username }}</span>
+        <span>Cashier</span>
+        <span>{{ sale.cashier.get_full_name|default:sale.cashier.username }}</span>
       </div>
       <div class="receipt-meta-row">
-        <span>Payment</span><span>{{ sale.get_payment_method_display }}</span>
+        <span>Payment</span>
+        <span>{{ sale.get_payment_method_display }}</span>
       </div>
     </div>
 
-    <div class="receipt-divider">- - - - - - - - - - - - - - - -</div>
+    <div class="receipt-divider">--------------------------------</div>
 
     <table class="receipt-items">
       <thead>
         <tr>
-          <th class="item-name-col">Item</th>
-          <th class="item-qty-col">Qty</th>
-          <th class="item-price-col">Price</th>
-          <th class="item-sub-col">Total</th>
+          <th class="col-name">Item</th>
+          <th class="col-qty">Qty</th>
+          <th class="col-price">Price</th>
+          <th class="col-sub">Total</th>
         </tr>
       </thead>
       <tbody>
         {% for item in sale.items.all %}
         <tr>
-          <td class="item-name-col">{{ item.product.name }}</td>
-          <td class="item-qty-col">{{ item.quantity }}</td>
-          <td class="item-price-col">{{ item.unit_price|floatformat:0 }}</td>
-          <td class="item-sub-col">{{ item.subtotal|floatformat:0 }}</td>
+          <td class="col-name">{{ item.product.name }}</td>
+          <td class="col-qty">{{ item.quantity }}</td>
+          <td class="col-price">{{ item.unit_price|floatformat:0 }}</td>
+          <td class="col-sub">{{ item.subtotal|floatformat:0 }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
 
-    <div class="receipt-divider">- - - - - - - - - - - - - - - -</div>
+    <div class="receipt-divider">--------------------------------</div>
 
     <div class="receipt-totals">
-      <div class="receipt-total-row">
+      <div class="receipt-row">
         <span>Subtotal</span>
         <span>TZS {{ sale.total_amount|floatformat:0 }}</span>
       </div>
-      <div class="receipt-total-row receipt-grand">
+      <div class="receipt-row receipt-grand">
         <span>Total</span>
         <span>TZS {{ sale.total_amount|floatformat:0 }}</span>
       </div>
-      <div class="receipt-total-row">
+      <div class="receipt-row">
         <span>Paid ({{ sale.get_payment_method_display }})</span>
         <span>TZS {{ sale.amount_paid|floatformat:0 }}</span>
       </div>
       {% if sale.change_due > 0 %}
-      <div class="receipt-total-row receipt-change">
+      <div class="receipt-row receipt-change">
         <span>Change</span>
         <span>TZS {{ sale.change_due|floatformat:0 }}</span>
       </div>
       {% endif %}
     </div>
 
-    <div class="receipt-divider">- - - - - - - - - - - - - - - -</div>
+    <div class="receipt-divider">--------------------------------</div>
+
     <div class="receipt-footer">
-      <p>Items sold: {{ sale.item_count }}</p>
+      <p>Items: {{ sale.item_count }}</p>
       <p>Powered by ShopOS</p>
     </div>
   </div>
 </div>
-{% endblock %}
+
+</body>
+</html>

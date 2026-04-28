@@ -1,0 +1,406 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reports</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'reports/css/reports.css' %}">
+</head>
+<body>
+
+<div class="rep-wrap">
+
+  <!-- ── Header ── -->
+  <div class="rep-header">
+    <div>
+      <h1 class="rep-title">
+        <i class="fa fa-chart-bar"></i> Reports
+      </h1>
+      <p class="rep-subtitle">
+        {{ date_from|date:"d M Y" }} — {{ date_to|date:"d M Y" }}
+      </p>
+    </div>
+    <div class="rep-header-actions">
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline">
+        <i class="fa fa-home"></i> Dashboard
+      </a>
+      <a href="{% url 'reports:export' %}?period={{ period }}&date_from={{ date_from|date:'Y-m-d' }}&date_to={{ date_to|date:'Y-m-d' }}"
+         class="btn btn-gold">
+        <i class="fa fa-download"></i> Export CSV
+      </a>
+    </div>
+  </div>
+
+  <!-- ── Period filters ── -->
+  <div class="period-tabs">
+    <a href="?period=today"
+       class="period-tab {% if period == 'today' %}active{% endif %}">
+      Today
+    </a>
+    <a href="?period=week"
+       class="period-tab {% if period == 'week' %}active{% endif %}">
+      This week
+    </a>
+    <a href="?period=month"
+       class="period-tab {% if period == 'month' %}active{% endif %}">
+      This month
+    </a>
+    <a href="?period=year"
+       class="period-tab {% if period == 'year' %}active{% endif %}">
+      This year
+    </a>
+  </div>
+
+  <!-- ── Custom date range ── -->
+  <form method="get" class="date-range-form">
+    <input type="hidden" name="period" value="custom">
+    <div class="date-range-inputs">
+      <div class="date-field">
+        <label>From</label>
+        <input type="date" name="date_from"
+               value="{{ date_from|date:'Y-m-d' }}">
+      </div>
+      <div class="date-field">
+        <label>To</label>
+        <input type="date" name="date_to"
+               value="{{ date_to|date:'Y-m-d' }}">
+      </div>
+      <button type="submit" class="btn btn-gold">
+        <i class="fa fa-filter"></i> Apply
+      </button>
+    </div>
+  </form>
+
+  <!-- ── Revenue stat cards ── -->
+  <div class="section-label">Revenue summary</div>
+  <div class="rep-stat-grid">
+
+    <div class="rep-stat gold">
+      <div class="rep-stat-icon"><i class="fa fa-coins"></i></div>
+      <div class="rep-stat-body">
+        <div class="rep-stat-label">Total revenue</div>
+        <div class="rep-stat-val">TZS {{ total_revenue|floatformat:0 }}</div>
+        <div class="rep-stat-sub">POS + online orders</div>
+      </div>
+    </div>
+
+    <div class="rep-stat blue">
+      <div class="rep-stat-icon"><i class="fa fa-cash-register"></i></div>
+      <div class="rep-stat-body">
+        <div class="rep-stat-label">POS revenue</div>
+        <div class="rep-stat-val">TZS {{ pos_revenue|floatformat:0 }}</div>
+        <div class="rep-stat-sub">
+          {{ pos_count }} sale{{ pos_count|pluralize }}
+          &nbsp;·&nbsp;
+          {{ pos_refunds }} refund{{ pos_refunds|pluralize }}
+        </div>
+      </div>
+    </div>
+
+    <div class="rep-stat green">
+      <div class="rep-stat-icon"><i class="fa fa-shopping-cart"></i></div>
+      <div class="rep-stat-body">
+        <div class="rep-stat-label">Orders revenue</div>
+        <div class="rep-stat-val">TZS {{ orders_revenue|floatformat:0 }}</div>
+        <div class="rep-stat-sub">
+          {{ orders_completed }} completed
+          &nbsp;·&nbsp;
+          {{ orders_cancelled }} cancelled
+        </div>
+      </div>
+    </div>
+
+    <div class="rep-stat purple">
+      <div class="rep-stat-icon"><i class="fa fa-money-bill"></i></div>
+      <div class="rep-stat-body">
+        <div class="rep-stat-label">Cash collected</div>
+        <div class="rep-stat-val">TZS {{ cash_rev|floatformat:0 }}</div>
+        <div class="rep-stat-sub">
+          Mobile: TZS {{ mobile_rev|floatformat:0 }}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Revenue chart ── -->
+  <div class="rep-card">
+    <div class="rep-card-header">
+      <span class="rep-card-title">
+        <i class="fa fa-chart-line"></i> Revenue trend
+      </span>
+      <div class="chart-legend">
+        <span class="ldot gold"></span>&nbsp;POS
+        &nbsp;&nbsp;
+        <span class="ldot blue"></span>&nbsp;Orders
+      </div>
+    </div>
+    <div class="rep-chart-wrap">
+      <canvas id="revenue-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- ── Three charts ── -->
+  <div class="rep-three-col">
+
+    <!-- Payment methods -->
+    <div class="rep-card">
+      <div class="rep-card-header">
+        <span class="rep-card-title">
+          <i class="fa fa-chart-pie"></i> Payment methods
+        </span>
+      </div>
+      <div class="rep-chart-sm">
+        <canvas id="pay-chart"></canvas>
+      </div>
+      <div class="pie-legend">
+        <div class="pie-row">
+          <span class="ldot gold"></span> Cash
+          <span class="pie-val">TZS {{ cash_rev|floatformat:0 }}</span>
+        </div>
+        <div class="pie-row">
+          <span class="ldot blue"></span> Mobile
+          <span class="pie-val">TZS {{ mobile_rev|floatformat:0 }}</span>
+        </div>
+        <div class="pie-row">
+          <span class="ldot purple"></span> Card
+          <span class="pie-val">TZS {{ card_rev|floatformat:0 }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category breakdown -->
+    <div class="rep-card">
+      <div class="rep-card-header">
+        <span class="rep-card-title">
+          <i class="fa fa-chart-pie"></i> Sales by category
+        </span>
+      </div>
+      <div class="rep-chart-sm">
+        <canvas id="cat-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Order status -->
+    <div class="rep-card">
+      <div class="rep-card-header">
+        <span class="rep-card-title">
+          <i class="fa fa-chart-pie"></i> Order status
+        </span>
+      </div>
+      <div class="rep-chart-sm">
+        <canvas id="order-chart"></canvas>
+      </div>
+      <div class="pie-legend">
+        <div class="pie-row">
+          <span class="ldot gold"></span> Pending
+          <span class="pie-val">{{ orders_pending }}</span>
+        </div>
+        <div class="pie-row">
+          <span class="ldot green"></span> Completed
+          <span class="pie-val">{{ orders_completed }}</span>
+        </div>
+        <div class="pie-row">
+          <span class="ldot red"></span> Cancelled
+          <span class="pie-val">{{ orders_cancelled }}</span>
+        </div>
+        <div class="pie-row">
+          <span class="ldot blue"></span> Confirmed
+          <span class="pie-val">{{ orders_confirmed }}</span>
+        </div>
+        <div class="pie-row">
+          <span class="ldot purple"></span> Processing
+          <span class="pie-val">{{ orders_processing }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Two col: top products + recent sales ── -->
+  <div class="rep-two-col">
+
+    <!-- Top products -->
+    <div class="rep-card">
+      <div class="rep-card-header">
+        <span class="rep-card-title">
+          <i class="fa fa-fire"></i> Top products
+        </span>
+      </div>
+      <div class="rep-chart-wrap">
+        <canvas id="top-chart"></canvas>
+      </div>
+      <table class="rep-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Product</th>
+            <th>Units sold</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in top_products %}
+          <tr>
+            <td class="muted">{{ forloop.counter }}</td>
+            <td class="pname">{{ p.product__name }}</td>
+            <td>
+              <span class="badge badge-ok">{{ p.total_qty }}</span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="empty-row">
+              No sales in this period.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Recent sales -->
+    <div class="rep-card">
+      <div class="rep-card-header">
+        <span class="rep-card-title">
+          <i class="fa fa-receipt"></i> Recent sales
+        </span>
+        <a href="{% url 'pos:history' %}" class="rep-card-link">
+          View all
+        </a>
+      </div>
+      <div class="rep-table-wrap">
+        <table class="rep-table">
+          <thead>
+            <tr>
+              <th>Receipt</th>
+              <th class="hide-sm">Cashier</th>
+              <th>Total</th>
+              <th class="hide-sm">Method</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sale in recent_sales %}
+            <tr>
+              <td class="mono">{{ sale.sale_number }}</td>
+              <td class="hide-sm muted">{{ sale.cashier.username }}</td>
+              <td class="amount">
+                TZS {{ sale.total_amount|floatformat:0 }}
+              </td>
+              <td class="hide-sm">
+                <span class="badge badge-{{ sale.payment_method }}">
+                  {{ sale.get_payment_method_display }}
+                </span>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="empty-row">No sales found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Stock report ── -->
+  <div class="section-label">Stock report</div>
+  <div class="rep-two-col">
+
+    <div class="rep-card">
+      <div class="rep-card-header">
+        <span class="rep-card-title">
+          <i class="fa fa-triangle-exclamation"></i> Low stock
+        </span>
+        <a href="{% url 'inventory:overview' %}" class="rep-card-link">
+          Restock
+        </a>
+      </div>
+      <table class="rep-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Qty</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in low_stock %}
+          <tr>
+            <td class="pname">{{ p.name }}</td>
+            <td class="muted">{{ p.category.name|default:"—" }}</td>
+            <td>
+              <span class="badge badge-low">{{ p.quantity }}</span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="empty-row">
+              All products well stocked.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="rep-card">
+      <div class="rep-card-header">
+        <span class="rep-card-title">
+          <i class="fa fa-circle-xmark"></i> Out of stock
+        </span>
+      </div>
+      <table class="rep-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in out_of_stock %}
+          <tr>
+            <td class="pname">{{ p.name }}</td>
+            <td class="muted">{{ p.category.name|default:"—" }}</td>
+            <td>
+              <span class="badge badge-out">Out of stock</span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="empty-row">
+              No products out of stock.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Data for JS -->
+{{ chart_labels|json_script:"r-labels" }}
+{{ chart_pos|json_script:"r-pos" }}
+{{ chart_orders|json_script:"r-orders" }}
+{{ top_names|json_script:"r-top-names" }}
+{{ top_qtys|json_script:"r-top-qtys" }}
+{{ cat_labels|json_script:"r-cat-labels" }}
+{{ cat_data|json_script:"r-cat-data" }}
+{{ pay_data|json_script:"r-pay-data" }}
+{{ ord_pending|json_script:"r-ord-pending" }}
+{{ ord_completed|json_script:"r-ord-completed" }}
+{{ ord_cancelled|json_script:"r-ord-cancelled" }}
+{{ ord_confirmed|json_script:"r-ord-confirmed" }}
+{{ ord_processing|json_script:"r-ord-processing" }}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{% static 'reports/js/reports.js' %}"></script>
+</body>
+</html>

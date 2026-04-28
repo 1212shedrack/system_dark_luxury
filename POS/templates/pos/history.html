@@ -1,77 +1,114 @@
-
 {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sale History — ShopOS</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'pos/css/history.css' %}">
+</head>
+<body>
+<div class="history-wrap">
 
-{% block title %}Sale History{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'pos/css/pos.css' %}">
-{% endblock %}
-
-{% block content %}
-<div class="history-page">
   <div class="history-header">
-    <h1>Sale history</h1>
-    <form method="get" class="date-filter">
-      <input type="date" name="date" value="{{ filter_date|date:'Y-m-d' }}"
-             onchange="this.form.submit()">
-    </form>
+    <div>
+      <h1 class="history-title"><i class="fa fa-receipt"></i> Sale history</h1>
+      <p class="history-sub">{{ filter_date|date:"d F Y" }}</p>
+    </div>
+    <div class="history-actions">
+      <form method="get" class="date-filter">
+        <input type="date" name="date"
+               value="{{ filter_date|date:'Y-m-d' }}"
+               onchange="this.form.submit()">
+      </form>
+      <a href="{% url 'pos:screen' %}" class="btn btn-gold">
+        <i class="fa fa-cash-register"></i> POS
+      </a>
+    </div>
   </div>
 
   <div class="history-stats">
     <div class="stat-card">
-      <span class="stat-card-label">Sales today</span>
-      <span class="stat-card-val">{{ sales.count }}</span>
+      <div class="stat-icon"><i class="fa fa-receipt"></i></div>
+      <div>
+        <div class="stat-label">Sales</div>
+        <div class="stat-val">{{ sales.count }}</div>
+      </div>
     </div>
     <div class="stat-card">
-      <span class="stat-card-label">Revenue</span>
-      <span class="stat-card-val">TZS {{ daily_total|floatformat:0 }}</span>
+      <div class="stat-icon gold"><i class="fa fa-coins"></i></div>
+      <div>
+        <div class="stat-label">Revenue</div>
+        <div class="stat-val">TZS {{ daily_total|floatformat:0 }}</div>
+      </div>
     </div>
   </div>
 
   {% if sales %}
-  <table class="history-table">
-    <thead>
-      <tr>
-        <th>Receipt #</th>
-        <th>Time</th>
-        <th>Items</th>
-        <th>Payment</th>
-        <th>Total</th>
-        <th>Status</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for sale in sales %}
-      <tr class="{% if sale.status == 'refunded' %}row-refunded{% endif %}">
-        <td class="sale-number">{{ sale.sale_number }}</td>
-        <td>{{ sale.created_at|time:"H:i" }}</td>
-        <td>{{ sale.item_count }}</td>
-        <td>{{ sale.get_payment_method_display }}</td>
-        <td class="sale-total">TZS {{ sale.total_amount|floatformat:0 }}</td>
-        <td>
-          <span class="badge badge-{{ sale.status }}">{{ sale.get_status_display }}</span>
-        </td>
-        <td class="row-actions">
-          <a href="{% url 'pos:receipt' sale.id %}" class="btn-sm">Receipt</a>
-          {% if sale.status == 'completed' %}
-          <form method="post" action="{% url 'pos:refund' sale.id %}" style="display:inline"
-                onsubmit="return confirm('Refund {{ sale.sale_number }}? quantity will be restored.')">
-            {% csrf_token %}
-            <button type="submit" class="btn-sm btn-danger">Refund</button>
-          </form>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="table-wrap">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Receipt #</th>
+          <th>Time</th>
+          <th class="hide-sm">Items</th>
+          <th class="hide-sm">Payment</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sale in sales %}
+        <tr class="{% if sale.status == 'refunded' %}row-refunded{% endif %}">
+          <td class="sale-number">{{ sale.sale_number }}</td>
+          <td>{{ sale.created_at|time:"H:i" }}</td>
+          <td class="hide-sm">{{ sale.item_count }}</td>
+          <td class="hide-sm">
+            <span class="badge badge-{{ sale.payment_method }}">
+              {{ sale.get_payment_method_display }}
+            </span>
+          </td>
+          <td class="sale-total">TZS {{ sale.total_amount|floatformat:0 }}</td>
+          <td>
+            <span class="badge badge-{{ sale.status }}">
+              {{ sale.get_status_display }}
+            </span>
+          </td>
+          <td class="row-actions">
+            <a href="{% url 'pos:receipt' sale.id %}" class="btn btn-sm">
+              <i class="fa fa-receipt"></i>
+              <span class="hide-sm">Receipt</span>
+            </a>
+            {% if sale.status == 'completed' %}
+            <form method="post" action="{% url 'pos:refund' sale.id %}"
+                  style="display:inline"
+                  onsubmit="return confirm('Refund {{ sale.sale_number }}?')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger">
+                <i class="fa fa-rotate-left"></i>
+                <span class="hide-sm">Refund</span>
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
   {% else %}
   <div class="empty-history">
+    <i class="fa fa-receipt" style="font-size:48px;color:#2a2a2a;margin-bottom:1rem"></i>
     <p>No sales recorded for {{ filter_date|date:"d M Y" }}.</p>
-    <a href="{% url 'pos:screen' %}" class="btn btn-primary">Go to POS</a>
+    <a href="{% url 'pos:screen' %}" class="btn btn-gold" style="margin-top:1rem">
+      <i class="fa fa-cash-register"></i> Go to POS
+    </a>
   </div>
   {% endif %}
+
 </div>
-{% endblock %}
+</body>
+</html>

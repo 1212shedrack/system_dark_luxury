@@ -1,0 +1,153 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inventory — ShopOS</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'inventory/css/inventory.css' %}">
+</head>
+<body>
+<div class="inv-wrap">
+
+  <!-- Header -->
+  <div class="inv-header">
+    <div>
+      <h1 class="inv-title">Inventory</h1>
+      <p class="inv-subtitle">Stock levels across all products</p>
+    </div>
+    <div class="inv-header-actions">
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline">
+        <i class="fa fa-home"></i> Home
+      </a>
+      <a href="{% url 'inventory:log' %}" class="btn btn-gold">
+        <i class="fa fa-list"></i> Stock Log
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total products</div>
+      <div class="stat-val">{{ total_products }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Out of stock</div>
+      <div class="stat-val red" id="out-count">{{ out_of_stock|length }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Low stock</div>
+      <div class="stat-val amber" id="low-count">{{ low_stock|length }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Well stocked</div>
+      <div class="stat-val green">{{ products|length|add:"-0" }}</div>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  {% if out_of_stock or low_stock %}
+  <div class="alert-grid">
+    {% if out_of_stock %}
+    <div class="alert-box red">
+      <div class="alert-title">
+        <i class="fa fa-circle-xmark"></i> Out of stock ({{ out_of_stock|length }})
+      </div>
+      {% for p in out_of_stock %}
+      <div class="alert-item">
+        <span>{{ p.name }}</span>
+        <span class="alert-qty">0 units</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if low_stock %}
+    <div class="alert-box amber">
+      <div class="alert-title">
+        <i class="fa fa-triangle-exclamation"></i> Low stock ({{ low_stock|length }})
+      </div>
+      {% for p in low_stock %}
+      <div class="alert-item">
+        <span>{{ p.name }}</span>
+        <span class="alert-qty amber">{{ p.quantity }} left</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Search + Filter -->
+  <div class="table-toolbar">
+    <input type="text" id="search-input" placeholder="Search product..." class="search-input">
+    <select id="status-filter" class="filter-select">
+      <option value="">All status</option>
+      <option value="ok">In stock</option>
+      <option value="low">Low stock</option>
+      <option value="out">Out of stock</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table id="inv-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Category</th>
+          <th class="hide-sm">Price</th>
+          <th>Quantity</th>
+          <th>Status</th>
+          <th>Restock</th>
+        </tr>
+      </thead>
+      <tbody id="inv-tbody">
+        {% for product in products %}
+        <tr data-name="{{ product.name|lower }}" data-status="{{ product.stock_status }}">
+          <td class="product-name">{{ product.name }}</td>
+          <td class="text-muted">{{ product.category.name|default:"—" }}</td>
+          <td class="hide-sm text-muted">TZS {{ product.price|floatformat:0 }}</td>
+          <td class="qty-cell">{{ product.quantity }}</td>
+          <td>
+            {% if product.stock_status == 'out' %}
+              <span class="badge badge-out">Out of stock</span>
+            {% elif product.stock_status == 'low' %}
+              <span class="badge badge-low">Low stock</span>
+            {% else %}
+              <span class="badge badge-ok">In stock</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="POST" action="{% url 'inventory:restock' product.pk %}"
+                  class="restock-form" onsubmit="return validateRestock(this)">
+              {% csrf_token %}
+              <input type="number" name="quantity" class="restock-input"
+                     placeholder="qty" min="1">
+              <button type="submit" class="btn-restock">
+                <i class="fa fa-plus"></i>
+                <span class="hide-sm">Add</span>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="empty-row">No products found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- No results message -->
+  <div class="no-results" id="no-results" style="display:none">
+    No products match your search.
+  </div>
+
+</div>
+
+<script src="{% static 'inventory/js/overview.js' %}"></script>
+</body>
+</html>

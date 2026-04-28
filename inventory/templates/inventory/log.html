@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stock Log — ShopOS</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'inventory/css/inventory.css' %}">
+</head>
+<body>
+
+<div class="inv-wrap">
+
+  <!-- Header -->
+  <div class="inv-header">
+    <div>
+      <h1 class="inv-title">Stock log</h1>
+      <p class="inv-subtitle">Every stock movement recorded automatically</p>
+    </div>
+    <div class="inv-header-actions">
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline">
+        <i class="fa fa-home"></i> Home
+      </a>
+      <a href="{% url 'inventory:overview' %}" class="btn btn-gold">
+        <i class="fa fa-boxes"></i> Overview
+      </a>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <form method="GET" class="filter-form" id="filter-form">
+    <select name="product" class="filter-select">
+      <option value="">All products</option>
+      {% for p in products %}
+      <option value="{{ p.pk }}"
+        {% if product_filter == p.pk|stringformat:"s" %}selected{% endif %}>
+        {{ p.name }}
+      </option>
+      {% endfor %}
+    </select>
+    <select name="type" class="filter-select">
+      <option value="">All types</option>
+      {% for value, label in movement_types %}
+      <option value="{{ value }}"
+        {% if type_filter == value %}selected{% endif %}>
+        {{ label }}
+      </option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-gold">
+      <i class="fa fa-filter"></i> Filter
+    </button>
+    {% if product_filter or type_filter %}
+    <a href="{% url 'inventory:log' %}" class="btn btn-outline">
+      <i class="fa fa-xmark"></i> Clear
+    </a>
+    {% endif %}
+  </form>
+
+  <!-- Summary pills -->
+  <div class="log-summary" id="log-summary">
+    <span class="summary-pill">
+      Total: <b id="total-count">{{ movements|length }}</b>
+    </span>
+    <span class="summary-pill out">
+      Stock out: <b id="out-total">—</b>
+    </span>
+    <span class="summary-pill in">
+      Stock in: <b id="in-total">—</b>
+    </span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table id="log-table">
+      <thead>
+        <tr>
+          <th class="hide-sm">Date</th>
+          <th>Product</th>
+          <th class="hide-sm">Type</th>
+          <th>Before</th>
+          <th>Change</th>
+          <th>After</th>
+          <th class="hide-sm">Reference</th>
+          <th class="hide-sm">By</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in movements %}
+        <tr class="log-row"
+            data-qty="{{ m.quantity }}"
+            data-type="{{ m.movement_type }}">
+          <td class="hide-sm date-cell">{{ m.created_at|date:"d M Y H:i" }}</td>
+          <td class="product-name">{{ m.product.name }}</td>
+          <td class="hide-sm">
+            <span class="badge badge-{{ m.movement_type }}">
+              {{ m.get_movement_type_display }}
+            </span>
+          </td>
+          <td class="text-muted">{{ m.quantity_before }}</td>
+          <td>
+            {% if m.quantity < 0 %}
+              <span class="qty-out">{{ m.quantity }}</span>
+            {% else %}
+              <span class="qty-in">+{{ m.quantity }}</span>
+            {% endif %}
+          </td>
+          <td>{{ m.quantity_after }}</td>
+          <td class="hide-sm ref-cell">{{ m.reference|default:"—" }}</td>
+          <td class="hide-sm text-muted">{{ m.created_by.username|default:"system" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="empty-row">No stock movements found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script src="{% static 'inventory/js/log.js' %}"></script>
+</body>
+</html>

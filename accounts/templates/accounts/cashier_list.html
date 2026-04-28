@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manage Cashiers — ShopOS</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'accounts/css/manage.css' %}">
+</head>
+<body>
+<div class="manage-wrap">
+
+  <div class="manage-header">
+    <div>
+      <h1 class="manage-title">
+        <i class="fa fa-users"></i> Manage Cashiers
+      </h1>
+      <p class="manage-sub">{{ cashiers.count }} cashier{{ cashiers.count|pluralize }} registered</p>
+    </div>
+    <div class="manage-actions">
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline">
+        <i class="fa fa-home"></i> Dashboard
+      </a>
+      <a href="{% url 'cashier_add' %}" class="btn btn-gold">
+        <i class="fa fa-plus"></i> Add cashier
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+      <i class="fa fa-circle-check"></i> {{ message }}
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="table-wrap">
+    <table class="manage-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Username</th>
+          <th>Staff no.</th>
+          <th class="hide-sm">Email</th>
+          <th class="hide-sm">Joined</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cashier in cashiers %}
+        <tr class="{% if not cashier.is_active %}row-inactive{% endif %}">
+          <td class="user-name">
+            <div class="user-avatar">
+              {{ cashier.username|first|upper }}
+            </div>
+            <span>
+              {{ cashier.get_full_name|default:cashier.username }}
+            </span>
+          </td>
+          <td class="mono">{{ cashier.username }}</td>
+          <td class="mono staff-num">{{ cashier.staff_number|default:"—" }}</td>
+          <td class="hide-sm text-muted">{{ cashier.email|default:"—" }}</td>
+          <td class="hide-sm text-muted">
+            {{ cashier.date_joined|date:"d M Y" }}
+          </td>
+          <td>
+            {% if cashier.is_active %}
+              <span class="badge badge-active">Active</span>
+            {% else %}
+              <span class="badge badge-inactive">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="row-actions">
+            <a href="{% url 'cashier_edit' cashier.pk %}"
+               class="btn btn-sm" title="Edit">
+              <i class="fa fa-pen"></i>
+              <span class="hide-sm">Edit</span>
+            </a>
+            <a href="{% url 'cashier_reset_password' cashier.pk %}"
+               class="btn btn-sm" title="Reset password">
+              <i class="fa fa-key"></i>
+              <span class="hide-sm">Password</span>
+            </a>
+            <form method="post"
+                  action="{% url 'cashier_toggle' cashier.pk %}"
+                  style="display:inline"
+                  onsubmit="return confirm('{% if cashier.is_active %}Deactivate{% else %}Activate{% endif %} {{ cashier.username }}?')">
+              {% csrf_token %}
+              <button type="submit"
+                class="btn {% if cashier.is_active %}btn-danger{% else %}btn-success{% endif %}">
+                <i class="fa {% if cashier.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
+                <span class="hide-sm">
+                  {% if cashier.is_active %}Deactivate{% else %}Activate{% endif %}
+                </span>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="empty-row">
+            No cashiers yet.
+            <a href="{% url 'cashier_add' %}" class="text-gold">Add one</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>

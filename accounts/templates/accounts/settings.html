@@ -1,0 +1,186 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings — ShopOS</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'accounts/css/manage.css' %}">
+<link rel="stylesheet" href="{% static 'accounts/css/settings.css' %}">
+</head>
+<body>
+<div class="settings-wrap">
+
+  <div class="settings-header">
+    <div>
+      <h1 class="settings-title">
+        <i class="fa fa-cog"></i> Settings
+      </h1>
+      <p class="settings-sub">Configure your shop system</p>
+    </div>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-outline">
+      <i class="fa fa-home"></i> Dashboard
+    </a>
+  </div>
+
+  {% if success %}
+  <div class="alert alert-success">
+    <i class="fa fa-circle-check"></i> {{ success }}
+  </div>
+  {% endif %}
+
+  {% if error %}
+  <div class="alert alert-error">
+    <i class="fa fa-circle-exclamation"></i> {{ error }}
+  </div>
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Shop settings -->
+    <div class="settings-card">
+      <div class="settings-card-title">
+        <i class="fa fa-store"></i> Shop details
+      </div>
+
+      <div class="settings-grid">
+
+        <div class="field">
+          <label>Shop name</label>
+          <input type="text" name="shop_name"
+                 value="{{ shop.shop_name }}"
+                 placeholder="My Shop">
+        </div>
+
+        <div class="field">
+          <label>Currency</label>
+          <select name="currency" class="field-select">
+            <option value="TZS" {% if shop.currency == 'TZS' %}selected{% endif %}>TZS — Tanzanian Shilling</option>
+            <option value="USD" {% if shop.currency == 'USD' %}selected{% endif %}>USD — US Dollar</option>
+            <option value="KES" {% if shop.currency == 'KES' %}selected{% endif %}>KES — Kenyan Shilling</option>
+            <option value="UGX" {% if shop.currency == 'UGX' %}selected{% endif %}>UGX — Ugandan Shilling</option>
+            <option value="RWF" {% if shop.currency == 'RWF' %}selected{% endif %}>RWF — Rwandan Franc</option>
+            <option value="ZAR" {% if shop.currency == 'ZAR' %}selected{% endif %}>ZAR — South African Rand</option>
+            <option value="GBP" {% if shop.currency == 'GBP' %}selected{% endif %}>GBP — British Pound</option>
+            <option value="EUR" {% if shop.currency == 'EUR' %}selected{% endif %}>EUR — Euro</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Phone number</label>
+          <input type="text" name="shop_phone"
+                 value="{{ shop.shop_phone }}"
+                 placeholder="+255 712 345 678">
+        </div>
+
+        <div class="field">
+          <label>Low stock alert threshold</label>
+          <input type="number" name="low_stock_alert"
+                 value="{{ shop.low_stock_alert }}"
+                 min="1" max="100">
+          <small>Products with quantity at or below this number show as low stock</small>
+        </div>
+
+        <div class="field field-full">
+          <label>Shop address</label>
+          <textarea name="shop_address"
+                    placeholder="Street, City, Country"
+                    rows="2">{{ shop.shop_address }}</textarea>
+        </div>
+
+        <div class="field field-full">
+          <label>Receipt footer message</label>
+          <textarea name="receipt_footer"
+                    placeholder="Thank you for your purchase!"
+                    rows="2">{{ shop.receipt_footer }}</textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Logo -->
+    <div class="settings-card">
+      <div class="settings-card-title">
+        <i class="fa fa-image"></i> Shop logo
+      </div>
+
+      <div class="logo-section">
+        {% if shop.logo %}
+        <div class="logo-preview">
+          <img src="{{ shop.logo.url }}" alt="Shop logo" id="logo-img">
+        </div>
+        <div class="logo-actions">
+          <label for="logo-input" class="btn btn-outline btn-sm">
+            <i class="fa fa-arrow-up-from-bracket"></i> Replace logo
+          </label>
+          <label class="btn btn-danger btn-sm">
+            <input type="checkbox" name="remove_logo" value="1"
+                   style="display:none" id="remove-logo-check"
+                   onchange="handleRemove(this)">
+            <i class="fa fa-trash"></i> Remove logo
+          </label>
+        </div>
+        {% else %}
+        <div class="logo-placeholder" id="logo-placeholder">
+          <i class="fa fa-image"></i>
+          <p>No logo uploaded</p>
+        </div>
+        <label for="logo-input" class="btn btn-outline">
+          <i class="fa fa-arrow-up-from-bracket"></i> Upload logo
+        </label>
+        {% endif %}
+
+        <input type="file" name="logo" id="logo-input"
+               accept="image/*" style="display:none"
+               onchange="previewLogo(this)">
+        <small class="logo-hint">
+          PNG or JPG recommended. Will appear on receipts and dashboard.
+        </small>
+      </div>
+    </div>
+
+    <div class="settings-footer">
+      <button type="submit" class="btn btn-gold btn-lg">
+        <i class="fa fa-save"></i> Save settings
+      </button>
+      <a href="{% url 'change_password' %}" class="btn btn-outline">
+        <i class="fa fa-key"></i> Change password
+      </a>
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+function previewLogo(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    let img = document.getElementById('logo-img');
+    const placeholder = document.getElementById('logo-placeholder');
+    if (!img) {
+      img = document.createElement('img');
+      img.id = 'logo-img';
+      img.alt = 'Shop logo';
+      if (placeholder) placeholder.replaceWith(img);
+    }
+    img.src = e.target.result;
+    img.style.maxHeight = '80px';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function handleRemove(cb) {
+  const img = document.getElementById('logo-img');
+  if (cb.checked && img) {
+    img.style.opacity = '0.3';
+  } else if (img) {
+    img.style.opacity = '1';
+  }
+}
+</script>
+</body>
+</html>

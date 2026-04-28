@@ -11,9 +11,8 @@
 <div class="container">
 
   <!-- Home link -->
-  <a href="{% url 'admin_dashboard' %}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-         stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;vertical-align:middle;">
+  <a href="{% url 'admin_dashboard' %}" class="home-link">
+    <svg viewBox="0 0 24 24" class="home-icon">
       <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
       <polyline points="9 22 9 12 15 12 15 22"/>
     </svg>
@@ -24,8 +23,7 @@
   <div class="top-row">
     <h2>Product Management</h2>
     <a href="{% url 'add_product' %}" id="add-product-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-           stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;">
+      <svg viewBox="0 0 24 24" class="add-icon">
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
       Add Product
@@ -80,12 +78,12 @@
         <span>Stock: <strong>{{ product.quantity }}</strong></span>
       </div>
       <div class="m-card-bottom">
-        <a href="{% url 'update_product' product.id %}" style="flex:1;justify-content:center;display:inline-flex;align-items:center;gap:.4rem;color:var(--muted);text-decoration:none;font-size:.82rem;padding:.45rem .75rem;border:1px solid var(--border);border-radius:8px;transition:all .25s ease;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <a href="{% url 'update_product' product.id %}" class="m-action-link">
+          <svg viewBox="0 0 24 24" class="m-action-icon"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           Edit
         </a>
-        <a href="{% url 'delete_product' product.id %}" style="flex:1;justify-content:center;display:inline-flex;align-items:center;gap:.4rem;color:var(--muted);text-decoration:none;font-size:.82rem;padding:.45rem .75rem;border:1px solid var(--border);border-radius:8px;transition:all .25s ease;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+        <a href="{% url 'delete_product' product.id %}" class="m-action-link">
+          <svg viewBox="0 0 24 24" class="m-action-icon"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>
           Delete
         </a>
       </div>

@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sign In — ShopOS</title>
+<title>ShopOS</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     min-height: 100vh;
-    background: #0a0a0a;
+    background: #080808;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -22,10 +22,6 @@
     content: '';
     position: fixed;
     inset: 0;
-    background-image:
-      linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
-    background-size: 48px 48px;
     pointer-events: none;
   }
 
@@ -67,6 +63,7 @@
     align-items: center;
     gap: 10px;
     margin-bottom: 32px;
+    
   }
 
   .brand-icon {
@@ -322,19 +319,21 @@
   </div>
 
   <h1>Welcome back</h1>
-  <p class="subtitle">Sign in with your credentials below.<br>Your identifier determines your role automatically.</p>
+  <p class="subtitle">Sign in with your credentials below.
+    </p>
 
-  <div class="role-hints">
+  <!-- <div class="role-hints">
     <span class="role-hint admin">Admin — email</span>
     <span class="role-hint cashier">Cashier — staff no.</span>
     <span class="role-hint customer">Customer — username</span>
   </div>
 
-  <!-- Detected role badge (shown as user types) -->
-  <div class="detected-role" id="detected-role">
+   Detected role badge (shown as user types) -->
+
+  <!-- <div class="detected-role" id="detected-role">
     <span class="detected-dot"></span>
     <span id="detected-text">—</span>
-  </div>
+  </div> --> 
 
   {% if error %}
   <div class="error-box">
@@ -350,7 +349,7 @@
       <label for="identifier">Username</label>
       <div class="input-wrap">
         <input type="text" id="identifier" name="identifier"
-               placeholder="Email, staff number, or username"
+               placeholder="Username"
                value="{{ request.POST.identifier|default:'' }}"
                autocomplete="off" autofocus>
         <span class="input-icon" id="id-icon">
@@ -381,7 +380,7 @@
     <a href="{% url 'forgot_password' %}">Forgot password?</a>
   </div>
 
-  <div class="cred-guide">
+  <!-- <div class="cred-guide">
     <div class="cred-guide-title">Credential guide</div>
     <div class="cred-row">
       <span class="cred-label admin">Admin</span>
@@ -395,7 +394,7 @@
       <span class="cred-label customer">Customer</span>
       <span class="cred-example">john_doe</span>
     </div>
-  </div>
+  </div> -->
 
 </div>
 

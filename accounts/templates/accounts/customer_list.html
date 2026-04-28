@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manage Customers — ShopOS</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'accounts/css/manage.css' %}">
+</head>
+<body>
+<div class="manage-wrap">
+
+  <div class="manage-header">
+    <div>
+      <h1 class="manage-title">
+        <i class="fa fa-users"></i> Manage Customers
+      </h1>
+      <p class="manage-sub">
+        {{ customers.paginator.count }}
+        customer{{ customers.paginator.count|pluralize }} registered
+      </p>
+    </div>
+    <div class="manage-actions">
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-outline">
+        <i class="fa fa-home"></i> Dashboard
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+      <i class="fa fa-circle-check"></i> {{ message }}
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Search -->
+  <form method="get" class="search-bar">
+    <i class="fa fa-magnifying-glass search-icon"></i>
+    <input type="text" name="q" value="{{ search }}"
+           placeholder="Search by name, username or email…"
+           autocomplete="off">
+    {% if search %}
+    <a href="{% url 'customer_list' %}" class="clear-search">
+      <i class="fa fa-xmark"></i>
+    </a>
+    {% endif %}
+  </form>
+
+  <div class="table-wrap">
+    <table class="manage-table">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Username</th>
+          <th class="hide-sm">Email</th>
+          <th class="hide-sm">Joined</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for customer in customers %}
+        <tr class="{% if not customer.is_active %}row-inactive{% endif %}">
+          <td class="user-name">
+            <div class="user-avatar customer-av">
+              {{ customer.username|first|upper }}
+            </div>
+            <span>
+              {{ customer.get_full_name|default:customer.username }}
+            </span>
+          </td>
+          <td class="mono">{{ customer.username }}</td>
+          <td class="hide-sm text-muted">{{ customer.email|default:"—" }}</td>
+          <td class="hide-sm text-muted">
+            {{ customer.date_joined|date:"d M Y" }}
+          </td>
+          <td>
+            {% if customer.is_active %}
+              <span class="badge badge-active">Active</span>
+            {% else %}
+              <span class="badge badge-inactive">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="row-actions">
+            <a href="{% url 'customer_detail' customer.pk %}"
+               class="btn btn-sm">
+              <i class="fa fa-eye"></i>
+              <span class="hide-sm">View</span>
+            </a>
+            <form method="post"
+                  action="{% url 'customer_toggle' customer.pk %}"
+                  style="display:inline"
+                  onsubmit="return confirm('{% if customer.is_active %}Deactivate{% else %}Activate{% endif %} {{ customer.username }}?')">
+              {% csrf_token %}
+              <button type="submit"
+                class="btn {% if customer.is_active %}btn-danger{% else %}btn-success{% endif %}">
+                <i class="fa {% if customer.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
+                <span class="hide-sm">
+                  {% if customer.is_active %}Deactivate{% else %}Activate{% endif %}
+                </span>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="empty-row">No customers found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if customers.has_other_pages %}
+  <div class="pagination">
+    {% if customers.has_previous %}
+    <a href="?page={{ customers.previous_page_number }}{% if search %}&q={{ search }}{% endif %}"
+       class="page-btn">
+      <i class="fa fa-chevron-left"></i>
+    </a>
+    {% endif %}
+
+    <span class="page-info">
+      Page {{ customers.number }} of {{ customers.paginator.num_pages }}
+    </span>
+
+    {% if customers.has_next %}
+    <a href="?page={{ customers.next_page_number }}{% if search %}&q={{ search }}{% endif %}"
+       class="page-btn">
+      <i class="fa fa-chevron-right"></i>
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+</body>
+</html>

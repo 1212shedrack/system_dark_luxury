@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ action }} Cashier — ShopOS</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'accounts/css/manage.css' %}">
+</head>
+<body>
+<div class="form-wrap">
+
+  <div class="form-header">
+    <a href="{% url 'cashier_list' %}" class="back-link">
+      <i class="fa fa-arrow-left"></i> Back to cashiers
+    </a>
+    <h1 class="form-title">{{ action }} Cashier</h1>
+  </div>
+
+  {% if error %}
+  <div class="alert alert-error">
+    <i class="fa fa-circle-exclamation"></i> {{ error }}
+  </div>
+  {% endif %}
+
+  <div class="form-card">
+    <form method="POST">
+      {% csrf_token %}
+
+      <div class="form-grid">
+
+        <div class="field">
+          <label>Username <span class="required">*</span></label>
+          <input type="text" name="username"
+                 value="{{ cashier.username|default:'' }}"
+                 placeholder="e.g. john_cashier" required>
+        </div>
+
+        <div class="field">
+          <label>Staff number <span class="required">*</span></label>
+          <input type="text" name="staff_number"
+                 value="{{ cashier.staff_number|default:'' }}"
+                 placeholder="e.g. 786557" required>
+          <small>Used to log in to the system</small>
+        </div>
+
+        <div class="field">
+          <label>First name</label>
+          <input type="text" name="first_name"
+                 value="{{ cashier.first_name|default:'' }}"
+                 placeholder="First name">
+        </div>
+
+        <div class="field">
+          <label>Last name</label>
+          <input type="text" name="last_name"
+                 value="{{ cashier.last_name|default:'' }}"
+                 placeholder="Last name">
+        </div>
+
+        <div class="field">
+          <label>Email</label>
+          <input type="email" name="email"
+                 value="{{ cashier.email|default:'' }}"
+                 placeholder="optional">
+        </div>
+
+        {% if action == 'Add' %}
+        <div class="field">
+          <label>Password <span class="required">*</span></label>
+          <div class="input-wrap">
+            <input type="password" name="password"
+                   id="password" placeholder="Min. 6 characters" required>
+            <button type="button" class="toggle-pwd"
+                    onclick="togglePwd('password', this)">
+              <i class="fa fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Confirm password <span class="required">*</span></label>
+          <div class="input-wrap">
+            <input type="password" name="password2"
+                   id="password2" placeholder="Repeat password" required>
+            <button type="button" class="toggle-pwd"
+                    onclick="togglePwd('password2', this)">
+              <i class="fa fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+
+      <div class="form-footer">
+        <a href="{% url 'cashier_list' %}" class="btn btn-outline">
+          Cancel
+        </a>
+        <button type="submit" class="btn btn-gold">
+          <i class="fa fa-save"></i>
+          {{ action }} cashier
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+function togglePwd(id, btn) {
+  const inp = document.getElementById(id);
+  inp.type  = inp.type === 'text' ? 'password' : 'text';
+  btn.querySelector('i').className =
+    inp.type === 'text' ? 'fa fa-eye-slash' : 'fa fa-eye';
+}
+</script>
+</body>
+</html>

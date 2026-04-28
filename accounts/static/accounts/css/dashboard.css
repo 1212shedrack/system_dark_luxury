@@ -315,3 +315,14 @@ body {
     padding: 1.2rem 1rem;
   }
 }
+
+.sidebar-logo {
+  padding: 8px 0 4px;
+  text-align: center;
+}
+
+.sidebar-logo img {
+  max-height: 48px;
+  max-width: 140px;
+  object-fit: contain;
+}

@@ -26,6 +26,8 @@ INSTALLED_APPS = [
     "cart",
     "orders",
     "POS",
+    "inventory",
+    "reports",
 ]
 
 MIDDLEWARE = [
@@ -52,6 +54,8 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "cart.context_processors.cart_total",
+                'django.template.context_processors.debug',
+                'accounts.context_processors.shop_settings',
             ],
         },
     },
@@ -106,3 +110,4 @@ USE_TZ = True
 STATIC_URL = "static/"
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')

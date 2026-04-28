@@ -1,29 +1,240 @@
 {% extends 'accounts/dashboard_base.html' %}
+{% load static %}
 
 {% block menu %}
-
-<a href="{% url 'pos:screen' %}">POS</a>
-<a href="{% url 'orders:order_list' %}"> View Orders</a>
-<a href="#" > Sales</a>
-<div class="dropdown">
-    <a href="#">Products</a>
-    <div class="dropdown-content">
-      <!-- <a href="{% url 'manage_products' %}">manage products</a> -->
-      <a href="{% url 'product_list' %}">View Product List</a>
-      <a href="{% url 'add_product' %}">Add Product</a>
-    </div>
-  </div>
-    <a href="{% url 'cart:cart_detail' %}">
-    Cart ({{ request.session.cart|length|default:0 }})
+<a href="{% url 'cashier_dashboard' %}" class="active">
+  <i class="fa fa-home"></i> Dashboard
 </a>
+<a href="{% url 'pos:screen' %}">
+  <i class="fa fa-cash-register"></i> POS Terminal
+</a>
+<a href="{% url 'pos:history' %}">
+  <i class="fa fa-receipt"></i> Sale history
+</a>
+<a href="{% url 'orders:order_list' %}">
+  <i class="fa fa-shopping-cart"></i> Orders
+</a>
+<div class="dropdown">
+  <a href="#"><i class="fa fa-box"></i> Products</a>
+  <div class="dropdown-content">
+    <a href="{% url 'product_list' %}">View product list</a>
+    <a href="{% url 'add_product' %}">Add product</a>
+  </div>
+</div>
+<a href="{% url 'cart:cart_detail' %}">
+  <i class="fa fa-cart-shopping"></i> Cart
+</a>
+<a class="logout" href="{% url 'logout' %}">
+  <i class="fa fa-sign-out"></i> Logout
+</a>
+{% endblock %}
 
-<a class="logout" href="{% url 'logout' %}">Logout</a>
-
+{% block mobile_menu %}
+<a href="{% url 'cashier_dashboard' %}">
+  <i class="fa fa-home"></i> Dashboard
+</a>
+<a href="{% url 'pos:screen' %}">
+  <i class="fa fa-cash-register"></i> POS
+</a>
+<a href="{% url 'pos:history' %}">
+  <i class="fa fa-receipt"></i> History
+</a>
+<a href="{% url 'logout' %}">
+  <i class="fa fa-sign-out"></i> Logout
+</a>
 {% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'accounts/css/cashier_dashboard.css' %}">
 
-<h1>Cashier Dashboard</h1>
-<p>Make sales here</p>
+<div class="cdash-wrap">
 
+  <!-- Header -->
+  <div class="cdash-header">
+    <div>
+      <h1 class="cdash-title">
+        <i class="fa fa-cash-register"></i> Cashier Dashboard
+      </h1>
+      <p class="cdash-subtitle">
+        {{ request.user.get_full_name|default:request.user.username }}
+        — <span id="live-date"></span>
+      </p>
+    </div>
+    <a href="{% url 'pos:screen' %}" class="btn btn-gold btn-lg">
+      <i class="fa fa-cash-register"></i> Open POS
+    </a>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="cdash-stat-grid">
+
+    <div class="cdash-stat gold">
+      <div class="cdash-stat-icon">
+        <i class="fa fa-coins"></i>
+      </div>
+      <div class="cdash-stat-body">
+        <div class="cdash-stat-label">Today's revenue</div>
+        <div class="cdash-stat-val">
+          TZS {{ today_revenue|floatformat:0 }}
+        </div>
+        <div class="cdash-stat-sub">
+          {{ today_count }} sale{{ today_count|pluralize }}
+        </div>
+      </div>
+    </div>
+
+    <div class="cdash-stat green">
+      <div class="cdash-stat-icon">
+        <i class="fa fa-receipt"></i>
+      </div>
+      <div class="cdash-stat-body">
+        <div class="cdash-stat-label">This week</div>
+        <div class="cdash-stat-val">
+          TZS {{ week_revenue|floatformat:0 }}
+        </div>
+        <div class="cdash-stat-sub">
+          {{ week_count }} sale{{ week_count|pluralize }}
+        </div>
+      </div>
+    </div>
+
+    <div class="cdash-stat blue">
+      <div class="cdash-stat-icon">
+        <i class="fa fa-money-bill"></i>
+      </div>
+      <div class="cdash-stat-body">
+        <div class="cdash-stat-label">Cash today</div>
+        <div class="cdash-stat-val" id="cash-val">
+          TZS {{ today_revenue|floatformat:0 }}
+        </div>
+        <div class="cdash-stat-sub">cash payments</div>
+      </div>
+    </div>
+
+    <div class="cdash-stat purple">
+      <div class="cdash-stat-icon">
+        <i class="fa fa-mobile"></i>
+      </div>
+      <div class="cdash-stat-body">
+        <div class="cdash-stat-label">Mobile today</div>
+        <div class="cdash-stat-val" id="mobile-val">—</div>
+        <div class="cdash-stat-sub">mobile money</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Two columns -->
+  <div class="cdash-two-col">
+
+    <!-- Revenue chart -->
+    <div class="cdash-card">
+      <div class="cdash-card-header">
+        <span class="cdash-card-title">
+          <i class="fa fa-chart-bar"></i> My revenue — last 7 days
+        </span>
+      </div>
+      <div class="cdash-chart-wrap">
+        <canvas id="revenue-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Payment breakdown chart -->
+    <div class="cdash-card">
+      <div class="cdash-card-header">
+        <span class="cdash-card-title">
+          <i class="fa fa-chart-pie"></i> Payment methods today
+        </span>
+      </div>
+      <div class="cdash-chart-wrap cdash-chart-sm">
+        <canvas id="payment-chart"></canvas>
+      </div>
+      <div class="cdash-payment-legend">
+        <div class="cdash-legend-row">
+          <span class="cdash-legend-dot gold"></span>
+          <span>Cash</span>
+          <span class="cdash-legend-val" id="leg-cash">—</span>
+        </div>
+        <div class="cdash-legend-row">
+          <span class="cdash-legend-dot blue"></span>
+          <span>Mobile money</span>
+          <span class="cdash-legend-val" id="leg-mobile">—</span>
+        </div>
+        <div class="cdash-legend-row">
+          <span class="cdash-legend-dot purple"></span>
+          <span>Card</span>
+          <span class="cdash-legend-val" id="leg-card">—</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Recent sales -->
+  <div class="cdash-card">
+    <div class="cdash-card-header">
+      <span class="cdash-card-title">
+        <i class="fa fa-clock-rotate-left"></i> Recent sales
+      </span>
+      <a href="{% url 'pos:history' %}" class="cdash-card-link">
+        View all
+      </a>
+    </div>
+    <div class="cdash-table-wrap">
+      <table class="cdash-table">
+        <thead>
+          <tr>
+            <th>Receipt</th>
+            <th>Time</th>
+            <th class="hide-sm">Items</th>
+            <th class="hide-sm">Method</th>
+            <th>Total</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sale in recent_sales %}
+          <tr>
+            <td class="mono">{{ sale.sale_number }}</td>
+            <td>{{ sale.created_at|time:"H:i" }}</td>
+            <td class="hide-sm text-muted">{{ sale.item_count }}</td>
+            <td class="hide-sm">
+              <span class="badge badge-{{ sale.payment_method }}">
+                {{ sale.get_payment_method_display }}
+              </span>
+            </td>
+            <td class="amount">TZS {{ sale.total_amount|floatformat:0 }}</td>
+            <td>
+              <a href="{% url 'pos:receipt' sale.id %}"
+                 class="btn btn-sm">
+                <i class="fa fa-receipt"></i>
+                <span class="hide-sm">Receipt</span>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="empty-row">
+              No sales yet. 
+              <a href="{% url 'pos:screen' %}" 
+                 style="color:#c4a45d">Open POS</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Data for JS -->
+{{ chart_labels|json_script:"c-labels" }}
+{{ chart_revenue|json_script:"c-revenue" }}
+{{ cash_total|json_script:"c-cash" }}
+{{ mobile_total|json_script:"c-mobile" }}
+{{ card_total|json_script:"c-card" }}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{% static 'accounts/js/cashier_dashboard.js' %}"></script>
 {% endblock %}

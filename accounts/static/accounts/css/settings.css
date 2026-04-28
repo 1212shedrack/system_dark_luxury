@@ -1,0 +1,163 @@
+/* setting */
+
+.settings-wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  position: relative;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.settings-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #f0ece0;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-sub { font-size: 13px; color: #555; }
+
+/* ── Settings card ── */
+.settings-card {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 30px; right: 30px; height: 1px;
+  background: linear-gradient(90deg, transparent, #c4a45d44, transparent);
+}
+
+.settings-card-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #c4a45d;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+/* ── Settings grid ── */
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field-full { grid-column: 1 / -1; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+
+.field label {
+  font-size: 12px; font-weight: 500;
+  color: #666; text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.field input,
+.field textarea,
+.field-select {
+  background: #0d0d0d;
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px; color: #e8e0cc;
+  font-family: inherit; outline: none;
+  transition: border-color .2s;
+  width: 100%;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field-select:focus {
+  border-color: #c4a45d55;
+  box-shadow: 0 0 0 3px #c4a45d0d;
+}
+
+.field textarea { resize: vertical; min-height: 70px; }
+.field small { font-size: 11px; color: #444; line-height: 1.5; }
+
+/* ── Logo section ── */
+.logo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.logo-preview {
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 12px;
+  display: inline-flex;
+}
+
+.logo-preview img {
+  max-height: 80px;
+  max-width: 200px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.logo-placeholder {
+  background: #0d0d0d;
+  border: 1px dashed #2a2a2a;
+  border-radius: 10px;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #333;
+  font-size: 13px;
+}
+
+.logo-placeholder i { font-size: 28px; }
+
+.logo-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.logo-hint {
+  font-size: 11px; color: #444;
+  line-height: 1.5;
+}
+
+/* ── Footer ── */
+.settings-footer {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.btn-lg { padding: 11px 22px; font-size: 14px; }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .settings-wrap  { padding: 1rem; }
+  .settings-grid  { grid-template-columns: 1fr; }
+  .field-full     { grid-column: 1; }
+  .settings-footer { flex-direction: column; }
+  .settings-footer .btn { justify-content: center; }
+}

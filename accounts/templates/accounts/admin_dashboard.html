@@ -1,31 +1,420 @@
 {% extends 'accounts/dashboard_base.html' %}
+{% load static %}
 
 {% block menu %}
-
-<a href="#"><i class="fa fa-home"></i> Dashboard</a><a href="#"><i class="fa fa-user"></i> Manage Cashier</a>
- <div class="dropdown">
-    <a href="#"><i class="fa fa-box"></i> Products</a>
-    <div class="dropdown-content">
-      <a href="{% url 'manage_products' %}">manage products</a>
-      <a href="{% url 'product_list' %}">View Product List</a>
-      <a href="{% url 'add_product' %}">Add Product</a>
-    </div>
+<a href="{% url 'admin_dashboard' %}" class="active"><i class="fa fa-home"></i> Dashboard</a>
+<a href="{% url 'cashier_list' %}"><i class="fa fa-user"></i> Manage Cashier</a>
+<a href="{% url 'pos:history' %}"><i class="fa fa-receipt"></i> Sale history</a>
+<div class="dropdown">
+  <a href="#"><i class="fa fa-box"></i> Products</a>
+  <div class="dropdown-content">
+    <a href="{% url 'manage_products' %}">Manage products</a>
+    <a href="{% url 'product_list' %}">View product list</a>
+    <a href="{% url 'add_product' %}">Add product</a>
   </div>
-  <a href="{% url 'cart:cart_detail' %}">
-    Cart ({{ request.session.cart|length|default:0 }})
-</a>
-<a href="#"><i class="fa fa-chart-bar"></i> Reports</a>
-<a href="#"><i class="fa fa-cog"></i> Settings</a>
-<a href="{% url 'orders:order_list' %}"><i class="fa fa-shopping-cart"></i> View Orders</a>
-<a href="#"><i class="fa fa-users"></i> Manage Users</a>
-<a href="#"><i class="fa fa-box"></i> Inventory</a>
-<a class="logout" href="{% url 'logout' %}" ><i class="fa fa-sign-out"></i> Logout</a>
+</div>
+<a href="{% url 'cart:cart_detail' %}"><i class="fa fa-cart-shopping"></i> Cart</a>
+<a href="{% url 'reports:overview' %}"><i class="fa fa-chart-bar"></i> Reports</a>
+<a href="{% url 'shop_settings' %}"><i class="fa fa-cog"></i> Settings</a>
+<a href="{% url 'orders:order_list' %}"><i class="fa fa-shopping-cart"></i> Orders</a>
+<a href="{% url 'customer_list' %}"><i class="fa fa-users"></i> Manage Customers</a>
+<a href="{% url 'inventory:overview' %}"><i class="fa fa-boxes"></i> Inventory</a>
+<a class="logout" href="{% url 'logout' %}"><i class="fa fa-sign-out"></i> Logout</a>
+{% endblock %}
 
+{% block mobile_menu %}
+<a href="{% url 'admin_dashboard' %}"><i class="fa fa-home"></i> Dashboard</a>
+<a href="{% url 'pos:history' %}"><i class="fa fa-receipt"></i> Sale history</a>
+<a href="{% url 'orders:order_list' %}"><i class="fa fa-shopping-cart"></i> Orders</a>
+<a href="{% url 'inventory:overview' %}"><i class="fa fa-boxes"></i> Inventory</a>
+<a href="{% url 'logout' %}"><i class="fa fa-sign-out"></i> Logout</a>
 {% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'accounts/css/admin_dashboard.css' %}">
+<div class="dash-wrap">
+<!-- HERDERS -->
+  <div class="dash-header">
+    <div>
+      <h1 class="dash-title">Admin Dashboard</h1>
+      <p class="dash-subtitle">
+        {{ request.user.get_full_name|default:request.user.username }}
+        &nbsp;—&nbsp; system overview
+      </p>
+    </div>
+    <div class="dash-date">
+      <i class="fa fa-calendar"></i>
+      <span id="live-date"></span>
+    </div>
+  </div>
 
-<h1>Admin Dashboard</h1>
-<p>System control panel</p>
+<!-- REVENUE + STATS -->
+  <div class="section-label">Revenue</div>
+  <div class="stat-grid">
 
+    <div class="stat-card gold">
+      <div class="stat-icon"><i class="fa fa-coins"></i></div>
+      <div class="stat-body">
+        <div class="stat-label">Today total</div>
+        <div class="stat-val">TZS {{ today_total_revenue|floatformat:0 }}</div>
+        <div class="stat-sub">
+          POS: TZS {{ today_pos_revenue|floatformat:0 }}
+          &nbsp;·&nbsp;
+          Orders: TZS {{ today_orders_rev|floatformat:0 }}
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card blue">
+      <div class="stat-icon"><i class="fa fa-calendar-week"></i></div>
+      <div class="stat-body">
+        <div class="stat-label">Weekly revenue</div>
+        <div class="stat-val">TZS {{ week_total_revenue|floatformat:0 }}</div>
+        <div class="stat-sub">
+          POS: TZS {{ week_pos_rev|floatformat:0 }}
+          &nbsp;·&nbsp;
+          Orders: TZS {{ week_orders_rev|floatformat:0 }}
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card green">
+      <div class="stat-icon"><i class="fa fa-money-bill"></i></div>
+      <div class="stat-body">
+        <div class="stat-label">Daily cash</div>
+        <div class="stat-val">TZS {{ daily_cash|floatformat:0 }}</div>
+        <div class="stat-sub">
+          Mobile: TZS {{ daily_mobile|floatformat:0 }}
+          &nbsp;·&nbsp;
+          Card: TZS {{ daily_card|floatformat:0 }}
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card red">
+      <div class="stat-icon"><i class="fa fa-triangle-exclamation"></i></div>
+      <div class="stat-body">
+        <div class="stat-label">Low stock alerts</div>
+        <div class="stat-val">{{ low_stock|length }}</div>
+        <div class="stat-sub">
+          <a href="{% url 'inventory:overview' %}" class="stat-link">
+            View inventory
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+<!-- ORDERS -->
+
+  <div class="section-label">Orders &amp; products</div>
+  <div class="stat-grid">
+
+    <div class="stat-card blue">
+      <div class="stat-icon"><i class="fa fa-shopping-cart"></i></div>
+      <div class="stat-body">
+        <div class="stat-label">Orders today</div>
+        <div class="stat-val">{{ today_orders_count }}</div>
+        <div class="stat-sub">
+          {{ pending_orders }} pending
+          &nbsp;·&nbsp;
+          {{ processing_orders }} processing
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card green">
+      <div class="stat-icon"><i class="fa fa-boxes"></i></div>
+      <div class="stat-body">
+        <div class="stat-label">Total products</div>
+        <div class="stat-val">{{ total_products }}</div>
+        <div class="stat-sub">{{ out_of_stock }} out of stock</div>
+      </div>
+    </div>
+
+    <div class="stat-card gold">
+      <div class="stat-icon"><i class="fa fa-receipt"></i></div>
+      <div class="stat-body">
+        <div class="stat-label">POS sales today</div>
+        <div class="stat-val">{{ today_pos_count }}</div>
+        <div class="stat-sub">completed transactions</div>
+      </div>
+    </div>
+
+    <div class="stat-card red">
+      <div class="stat-icon"><i class="fa fa-clock"></i></div>
+      <div class="stat-body">
+        <div class="stat-label">Pending orders</div>
+        <div class="stat-val">{{ pending_orders }}</div>
+        <div class="stat-sub">
+          <a href="{% url 'orders:order_list' %}" class="stat-link">
+            View orders
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════ REVENUE CHART ════ -->
+  <div class="section-card">
+    <div class="section-header">
+      <span class="section-title">
+        <i class="fa fa-chart-line"></i> Revenue — last 7 days
+      </span>
+      <div class="chart-legend">
+        <span class="legend-dot gold"></span>&nbsp;POS
+        &nbsp;&nbsp;
+        <span class="legend-dot blue"></span>&nbsp;Orders
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="revenue-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- ════ PIE CHARTS -->
+  <div class="three-col">
+
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">
+          <i class="fa fa-chart-pie"></i> Today payments
+        </span>
+      </div>
+      <div class="chart-wrap-sm">
+        <canvas id="today-pay-chart"></canvas>
+      </div>
+      <div class="pie-legend">
+        <div class="pie-legend-row">
+          <span class="legend-dot gold"></span> Cash
+          <span class="pie-legend-val">TZS {{ daily_cash|floatformat:0 }}</span>
+        </div>
+        <div class="pie-legend-row">
+          <span class="legend-dot blue"></span> Mobile
+          <span class="pie-legend-val">TZS {{ daily_mobile|floatformat:0 }}</span>
+        </div>
+        <div class="pie-legend-row">
+          <span class="legend-dot purple"></span> Card
+          <span class="pie-legend-val">TZS {{ daily_card|floatformat:0 }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">
+          <i class="fa fa-chart-pie"></i> This month payments
+        </span>
+      </div>
+      <div class="chart-wrap-sm">
+        <canvas id="month-pay-chart"></canvas>
+      </div>
+      <div class="pie-legend">
+        <div class="pie-legend-row">
+          <span class="legend-dot gold"></span> Cash
+        </div>
+        <div class="pie-legend-row">
+          <span class="legend-dot blue"></span> Mobile
+        </div>
+        <div class="pie-legend-row">
+          <span class="legend-dot purple"></span> Card
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">
+          <i class="fa fa-chart-pie"></i> Order status
+        </span>
+      </div>
+      <div class="chart-wrap-sm">
+        <canvas id="order-status-chart"></canvas>
+      </div>
+      <div class="pie-legend">
+        <div class="pie-legend-row">
+          <span class="legend-dot gold"></span> Pending
+        </div>
+        <div class="pie-legend-row">
+          <span class="legend-dot blue"></span> Confirmed
+        </div>
+        <div class="pie-legend-row">
+          <span class="legend-dot purple"></span> Processing
+        </div>
+        <div class="pie-legend-row">
+          <span class="legend-dot green"></span> Completed
+        </div>
+        <div class="pie-legend-row">
+          <span class="legend-dot red"></span> Cancelled
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RECENT SALES + ORDERS -->
+  <div class="two-col">
+
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">
+          <i class="fa fa-receipt"></i> Recent POS sales
+        </span>
+        <a href="{% url 'pos:history' %}" class="section-link">View all</a>
+      </div>
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>Receipt</th>
+            <th>Cashier</th>
+            <th>Amount</th>
+            <th>Method</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sale in recent_sales %}
+          <tr>
+            <td class="mono">{{ sale.sale_number }}</td>
+            <td>{{ sale.cashier.username }}</td>
+            <td class="amount">TZS {{ sale.total_amount|floatformat:0 }}</td>
+            <td>
+              <span class="badge badge-{{ sale.payment_method }}">
+                {{ sale.get_payment_method_display }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="empty-row">No sales yet today.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">
+          <i class="fa fa-shopping-cart"></i> Recent orders
+        </span>
+        <a href="{% url 'orders:order_list' %}" class="section-link">View all</a>
+      </div>
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in recent_orders %}
+          <tr>
+            <td class="mono">#{{ order.id }}</td>
+            <td>{{ order.customer.username }}</td>
+            <td class="amount">TZS {{ order.get_total_price|floatformat:0 }}</td>
+            <td>
+              <span class="badge badge-{{ order.status }}">
+                {{ order.get_status_display }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="empty-row">No orders yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- LOW STOCK + TOP PRODUCTS  -->
+  <div class="two-col">
+
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">
+          <i class="fa fa-triangle-exclamation"></i> Low stock
+        </span>
+        <a href="{% url 'inventory:overview' %}" class="section-link">
+          Restock
+        </a>
+      </div>
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Qty left</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in low_stock %}
+          <tr>
+            <td style="color:#f0ece0;font-weight:500">{{ p.name }}</td>
+            <td class="text-muted">{{ p.category.name|default:"—" }}</td>
+            <td><span class="badge badge-low">{{ p.quantity }}</span></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="empty-row">All products well stocked.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">
+          <i class="fa fa-fire"></i> Top selling products
+        </span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="top-products-chart"></canvas>
+      </div>
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Product</th>
+            <th>Units sold</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in top_products %}
+          <tr>
+            <td class="text-muted">{{ forloop.counter }}</td>
+            <td style="color:#f0ece0;font-weight:500">{{ p.product__name }}</td>
+            <td><span class="badge badge-ok">{{ p.total_qty }}</span></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="empty-row">No sales recorded yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>
+
+   <!-- DATA FOR JS  -->
+{{ chart_labels|json_script:"chart-labels" }}
+{{ chart_pos|json_script:"chart-pos" }}
+{{ chart_orders|json_script:"chart-orders" }}
+{{ top_names|json_script:"top-names" }}
+{{ top_qtys|json_script:"top-qtys" }}
+{{ today_pay_data|json_script:"today-pay" }}
+{{ month_pay_data|json_script:"month-pay" }}
+{{ order_status_data|json_script:"order-status" }}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{% static 'accounts/js/admin_dashboard.js' %}"></script>
 {% endblock %}

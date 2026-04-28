@@ -15,7 +15,14 @@
 
 <!-- ═════ SIDEBAR ═════ -->
 <div class="sidebar" id="sidebar">
-  <h2>My System</h2>
+ {% if shop_settings.logo %}
+<div class="sidebar-logo">
+  <img src="{{ shop_settings.logo.url }}"
+       alt="{{ shop_settings.shop_name|default:'ShopOS' }}">
+</div>
+{% else %}
+<h2>{{ shop_settings.shop_name|default:"ShopOS" }}</h2>
+{% endif %}
   <div id="sidebar-links">
     {% block menu %}
     {% endblock %}

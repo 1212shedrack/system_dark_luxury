@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Product
 from .forms import ProductForm
+from django.db.models import ProtectedError
 
 
 # VIEW PRODUCTS (ALL USERS)
@@ -44,5 +45,13 @@ def update_product(request, pk):
 # DELETE
 def delete_product(request, pk):
     product = get_object_or_404(Product, pk=pk)
-    product.delete()
+
+    try:
+        product.delete()
+        # image deletion handled by signal in products/signals.py
+    except ProtectedError:
+        # Product has sales history — deactivate instead of delete
+        product.is_active = False
+        product.save()
+
     return redirect('manage_products')
